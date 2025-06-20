@@ -27,9 +27,10 @@ class CPFA_controller : public BaseController {
 
 		bool IsHoldingFood();
 		bool IsUsingSiteFidelity();
-		bool IsInTheNest();
+		bool IsInTheNest(CVector2 position);
 
 		Real FoodDistanceTolerance;
+		int selectedNestIndex;
 
 		void SetLoopFunctions(CPFA_loop_functions* lf);
   
@@ -76,7 +77,8 @@ class CPFA_controller : public BaseController {
 			SEARCHING = 1,
 			RETURNING = 2,
 			SURVEYING = 3,
-			STOPPING = 4
+			STOPPING = 4,
+			FOLLOWING_ENTRY_PATH = 5
 		} CPFA_state;
 
 		/* iAnt CPFA state functions */
@@ -86,6 +88,7 @@ class CPFA_controller : public BaseController {
 		void Returning();
 		void Surveying();
 		void Stopping();
+		void FollowingEntryPath();
 		bool CanEnterPredefinedPath();
 		void GeneratePredefinedPath();
 

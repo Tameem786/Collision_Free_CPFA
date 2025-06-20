@@ -207,14 +207,19 @@ void CPFA_controller::CPFA() {
 			// argos::LOG << "STOPPING" << std::endl;
 			Stopping();
 			break;
+		case FOLLOWING_ENTRY_PATH:
+			FollowingEntryPath();
+			break;
 	}
 }
 
-bool CPFA_controller::IsInTheNest() {
+bool CPFA_controller::IsInTheNest(CVector2 position) {
 
 	for(const auto& nestPos : LoopFunctions->NestPositions) {
-		if((GetPosition() - nestPos).SquareLength() < LoopFunctions->NestRadiusSquared) {
-			return true;
+		if(nestPos == position) {
+			if((GetPosition() - nestPos).SquareLength() < LoopFunctions->NestRadiusSquared) {
+				return true;
+			}
 		}
 	}
 	return false;
@@ -514,10 +519,9 @@ void CPFA_controller::Surveying() {
 void CPFA_controller::Returning() {
     //LOG<<"Returning..."<<endl;
     //SetHoldingFood();
-	int selectedNestIndex;
 	if(isGivingUpSearch) {
 		// If the robot is near the red circle, bounce back after getting information.
-		if(LoopFunctions->IsNearRedCircle(GetPosition())) {
+		if(LoopFunctions->IsNearRedCircle(GetPosition()) && !isHoldingFood) {
 			// argos::LOG << GetId() << " Reached red circle without food - bouncing back." << std::endl;
 			
 			// BOUNCE BACK LOGIC: Move away from the red circle
@@ -696,6 +700,7 @@ void CPFA_controller::Returning() {
 				// Check if we can enter the predefined path (queue management)
 				if(CanEnterPredefinedPath()) {
 					// Add this robot to the queue and start following predefined path
+					CPFA_state = FOLLOWING_ENTRY_PATH;
 					LoopFunctions->AddRobotToPathQueue(GetId());
 					isFollowingPredefinedPath = true;
 					predefinedPathIndex = 0;
@@ -730,148 +735,137 @@ void CPFA_controller::Returning() {
 				SetTarget(nextExternalPos);
 			}
 		}
+	}
+}
 
-		// NEW: Follow predefined path from entry point to nest
-		if(isFollowingPredefinedPath && isHoldingFood) {
-			argos::CVector2 currentPos = GetPosition();
-			argos::CVector2 currentTarget = LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex];
-			argos::Real distanceToCurrentWaypoint = (currentPos - currentTarget).Length();
+void CPFA_controller::FollowingEntryPath() {
+
+	argos::CVector2 currentPos = GetPosition();
+	argos::CVector2 currentTarget = LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex];
+	argos::Real distanceToCurrentWaypoint = (currentPos - currentTarget).Length();
+	
+	// Check if we've reached the current waypoint
+	if(distanceToCurrentWaypoint < 0.15 && isFollowingPredefinedPath) { // Waypoint reached threshold
+		predefinedPathIndex++;
+
+		// Check if we've completed the path (reached nest) - Works Fine Up to Here
+		if(predefinedPathIndex >= LoopFunctions->SpiralPathCoordinatesForController.size()-1) {
+			// argos::LOG << GetId() << " Completed predefined path. Heading to nest." << std::endl;
 			
-			// Check if we've reached the current waypoint
-			if(distanceToCurrentWaypoint < 0.15) { // Waypoint reached threshold
-				predefinedPathIndex++;
+			
+			int availablePathToNest = LoopFunctions->GetAvailablePathToNest();
 
-				// Check if we've completed the path (reached nest) - Works Fine Up to Here
-				if(predefinedPathIndex >= LoopFunctions->SpiralPathCoordinatesForController.size()-1) {
-					argos::LOG << GetId() << " Completed predefined path. Heading to nest." << std::endl;
-					
-					
-					int availablePathToNest = LoopFunctions->GetAvailablePathToNest();
+			if(availablePathToNest != -1) {
+				selectedNestIndex = availablePathToNest;
+				LoopFunctions->RemoveRobotFromPathQueue(GetId());
+				LoopFunctions->AddRobotToPathQueueToNest(selectedNestIndex, GetId());
 
-					if(availablePathToNest != -1) {
-						selectedNestIndex = availablePathToNest;
-						LoopFunctions->RemoveRobotFromPathQueue(GetId());
-						LoopFunctions->AddRobotToPathQueueToNest(selectedNestIndex, GetId());
-
-						isFollowingPredefinedPath = false;
-						isHeadingToEntryPoint = true; // This will trigger nest arrival logic
-						// Set a nest position as the target (among 4 nest positions)
-						// LOG << GetId() << " Heading to nest(x,y): " 
-						// 				<< LoopFunctions->NestPositions[availablePathToNest].GetX() 
-						// 				<< ", "
-						// 				<< LoopFunctions->NestPositions[availablePathToNest].GetY()
-						// 				<< std::endl;
-						SetTarget(LoopFunctions->NestPositions[availablePathToNest]); // temporary value, need to fix later.
-						SetIsHeadingToNest(false);
-						// for(int i = 0; i < 4; i++) {
-						// 	argos::LOG << "Path available to nest " << i << ": " << LoopFunctions->IsPathAvailableToNest(i) << std::endl;
-						// }
-					} else {
-						argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
-					}
-					
-				} else {
-					// Move to next waypoint
-					SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
-					// argos::LOG << GetId() << " Moving to waypoint " << predefinedPathIndex 
-					// 		   << ": " << predefinedPath[predefinedPathIndex].GetX() 
-					// 		   << ", " << predefinedPath[predefinedPathIndex].GetY() << std::endl;
-				}
-			}
-			// Continue moving toward current waypoint if not reached yet
-		}
-
-		// Check if robot reached nest from predefined path
-		if(isHeadingToEntryPoint && isHoldingFood) {
-			if(IsInTheNest()) {
-
-				argos::LOG << GetId() << " Reached nest. Dropping food and exiting." << std::endl;
-				
-				// Remove this robot from the path queue
-				LoopFunctions->RemoveRobotFromPathQueueToNest(selectedNestIndex, GetId());
-				
-				// Based on a Poisson CDF, the robot may or may not create a pheromone
-				// located at the last place it picked up food.
-				argos::Real poissonCDF_pLayRate    = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfLayingPheromone);
-				argos::Real poissonCDF_sFollowRate = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfSiteFidelity);
-				argos::Real r1 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-				argos::Real r2 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-				
-				// Drop off the food and display in the nest, now temp value added, later need to add four nest logics.
-				// argos::CVector2 placementPosition;
-				// placementPosition.Set(0.0f+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5), 
-				// 					0.3f+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5));
-				
-				// while((placementPosition-CVector2(0.0f, 0.3f)).SquareLength()>pow(LoopFunctions->NestRadius/2.0-LoopFunctions->FoodRadius, 2))
-				// 	placementPosition.Set(0.0f+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5), 
-				// 						0.3f+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5));
-
-				// LoopFunctions->CollectedFoodList.push_back(placementPosition);
-				
-				// Update the location of the nest
-				num_targets_collected++;
-				LoopFunctions->currNumCollectedFood++;
-				LoopFunctions->setScore(num_targets_collected);
-				
-				if(poissonCDF_pLayRate > r1 && updateFidelity) {
-					TrailToShare.push_back(LoopFunctions->NestPositions[selectedNestIndex]);
-					argos::Real timeInSeconds = (argos::Real)(SimulationTick() / SimulationTicksPerSecond());
-					Pheromone sharedPheromone(SiteFidelityPosition, TrailToShare, timeInSeconds, LoopFunctions->RateOfPheromoneDecay, ResourceDensity);
-					LoopFunctions->PheromoneList.push_back(sharedPheromone);
-					sharedPheromone.Deactivate();
-				}
-				TrailToShare.clear();
-
-				// Food is now dropped, update state
-				isHoldingFood = false;
-				
-				// EXIT STRAIGHT: Set exit direction from nest outward (away from entry point)
-				// argos::CVector2 exitDirection = (GetPosition() - entryPoint).Normalize();
-				// argos::CVector2 exitTarget = LoopFunctions->RedCirclePosition + exitDirection * (redCircleRadius + 1.0);
-				
-				// SetTarget(exitTarget);
-				// SetIsHeadingToNest(false);
-
-				// Determine probabilistically whether to use site fidelity, pheromone trails, or random search
-				if(updateFidelity && poissonCDF_sFollowRate > r2) {
-					// Use site fidelity
-					LOG << GetId() << " Using site fidelity." << std::endl;
-					SetIsHeadingToNest(false);
-					SetTarget(SiteFidelityPosition);
-					isInformed = true;
-				}
-				else if(SetTargetPheromone()) {
-					// Use pheromone waypoints
-					LOG << GetId() << " Using pheromone waypoints." << std::endl;
-					SetIsHeadingToNest(false);
-					isInformed = true;
-					isUsingSiteFidelity = false;
-				}
-				else {
-					// Use random search
-					SetRandomSearchLocation(false);
-					SetIsHeadingToNest(false);
-					isInformed = false;
-					isUsingSiteFidelity = false;
-				}
-
-				// Reset all flags for next food collection cycle
-				hasStartedBoundaryFollow = false;
-				isFollowingCircleBoundary = false;
-				isPausingOnBoundary = false;
-				isHeadingToEntryPoint = false;
-				isGivingUpSearch = false;
 				isFollowingPredefinedPath = false;
-				predefinedPathIndex = 0;
-				CPFA_state = DEPARTING;   
-				travelingTime += SimulationTick() - startTime;
-				startTime = SimulationTick();
-				
-				argos::LOG << GetId() << " Exiting nest and ready for next foraging cycle." << std::endl;
+				isHeadingToEntryPoint = true; // This will trigger nest arrival logic
+
+				SetTarget(LoopFunctions->NestPositions[selectedNestIndex]); // temporary value, need to fix later.
+				SetIsHeadingToNest(false);
+
 			} else {
-				// LOG << GetId() << " is still heading to nest..." << std::endl;
-				// SetTarget(CVector2(0.0, 0.3));
+				argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
 			}
+			
+		} else {
+			// Move to next waypoint
+			SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+		}
+	}
+
+	// Check if robot reached nest from predefined path
+	if(isHeadingToEntryPoint && isHoldingFood) {
+		if(IsInTheNest(LoopFunctions->NestPositions[selectedNestIndex])) {
+
+			// argos::LOG << GetId() << " Reached nest. Dropping food and exiting." << std::endl;
+			
+			// Remove this robot from the path queue
+			LoopFunctions->RemoveRobotFromPathQueueToNest(selectedNestIndex, GetId());
+			
+			// Based on a Poisson CDF, the robot may or may not create a pheromone
+			// located at the last place it picked up food.
+			argos::Real poissonCDF_pLayRate    = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfLayingPheromone);
+			argos::Real poissonCDF_sFollowRate = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfSiteFidelity);
+			argos::Real r1 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
+			argos::Real r2 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
+			
+			// Drop off the food and display in the nest, now temp value added, later need to add four nest logics.
+			// argos::CVector2 placementPosition;
+			// argos::CVector2 nestPosition = LoopFunctions->NestPositions[selectedNestIndex];
+			// placementPosition.Set(nestPosition.GetX()+RNG->Gaussian(LoopFunctions->NestRadius/2.0, 0.5), 
+			// 					nestPosition.GetY()+RNG->Gaussian(LoopFunctions->NestRadius/2.0, 0.5));
+			
+			// while((placementPosition-nestPosition).SquareLength()>pow(LoopFunctions->NestRadius/2.0-LoopFunctions->FoodRadius, 2))
+			// 	placementPosition.Set(nestPosition.GetX()+RNG->Gaussian(LoopFunctions->NestRadius/2.0, 0.5), 
+			// 						nestPosition.GetY()+RNG->Gaussian(LoopFunctions->NestRadius/2.0, 0.5));
+
+			// LoopFunctions->CollectedFoodList.push_back(placementPosition);
+			
+			// Update the location of the nest
+			num_targets_collected++;
+			LoopFunctions->currNumCollectedFood++;
+			LoopFunctions->setScore(num_targets_collected);
+			
+			if(poissonCDF_pLayRate > r1 && updateFidelity) {
+				TrailToShare.push_back(LoopFunctions->NestPositions[selectedNestIndex]);
+				argos::Real timeInSeconds = (argos::Real)(SimulationTick() / SimulationTicksPerSecond());
+				Pheromone sharedPheromone(SiteFidelityPosition, TrailToShare, timeInSeconds, LoopFunctions->RateOfPheromoneDecay, ResourceDensity);
+				LoopFunctions->PheromoneList.push_back(sharedPheromone);
+				sharedPheromone.Deactivate();
+			}
+			TrailToShare.clear();
+
+			// Food is now dropped, update state
+			isHoldingFood = false;
+			
+			// EXIT STRAIGHT: Set exit direction from nest outward (away from entry point)
+			// argos::CVector2 exitDirection = (GetPosition() - entryPoint).Normalize();
+			// argos::CVector2 exitTarget = LoopFunctions->RedCirclePosition + exitDirection * (redCircleRadius + 1.0);
+			
+			// SetTarget(exitTarget);
+			// SetIsHeadingToNest(false);
+
+			// Determine probabilistically whether to use site fidelity, pheromone trails, or random search
+			if(updateFidelity && poissonCDF_sFollowRate > r2) {
+				// Use site fidelity
+				LOG << GetId() << " Using site fidelity." << std::endl;
+				SetIsHeadingToNest(false);
+				SetTarget(SiteFidelityPosition);
+				isInformed = true;
+			}
+			else if(SetTargetPheromone()) {
+				// Use pheromone waypoints
+				LOG << GetId() << " Using pheromone waypoints." << std::endl;
+				SetIsHeadingToNest(false);
+				isInformed = true;
+				isUsingSiteFidelity = false;
+			}
+			else {
+				// Use random search
+				SetRandomSearchLocation(false);
+				SetIsHeadingToNest(false);
+				isInformed = false;
+				isUsingSiteFidelity = false;
+			}
+
+			// Reset all flags for next food collection cycle
+			hasStartedBoundaryFollow = false;
+			isFollowingCircleBoundary = false;
+			isPausingOnBoundary = false;
+			isHeadingToEntryPoint = false;
+			isGivingUpSearch = false;
+			isFollowingPredefinedPath = false;
+			predefinedPathIndex = 0;
+			CPFA_state = DEPARTING;   
+			travelingTime += SimulationTick() - startTime;
+			startTime = SimulationTick();
+			
+
+		} else {
+			SetTarget(LoopFunctions->NestPositions[selectedNestIndex]);
 		}
 	}
 }

@@ -326,7 +326,7 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
         SpiralPathCoordinates.push_back(point);
     }
 
-	for(UInt32 i = 0; i <= SpiralPathCoordinates.size(); ++i) {
+	for(UInt32 i = 0; i < SpiralPathCoordinates.size(); ++i) {
 		SpiralPathCoordinatesForController.push_back(
 			CVector2(SpiralPathCoordinates[i].GetX(), SpiralPathCoordinates[i].GetY()));
 	}
