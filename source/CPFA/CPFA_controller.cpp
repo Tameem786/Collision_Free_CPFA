@@ -149,21 +149,21 @@ void CPFA_controller::Reset() {
     // SetTarget(); //qilu 09/08
 	argos::CVector2 currentPos = GetPosition();
 
-	// Calculate direction to closest nest
-	argos::CVector2 directionToNest = (LoopFunctions->RedCirclePosition - currentPos).Normalize();
+	// // Calculate direction to closest nest
+	// argos::CVector2 directionToNest = (LoopFunctions->RedCirclePosition - currentPos).Normalize();
 
-	// Set target to a point slightly outside the red circle (safe distance)
-	argos::Real redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
-	argos::Real safeDistance = redCircleRadius + 0.1;
-	argos::CVector2 targetOnCircle = LoopFunctions->RedCirclePosition - directionToNest * safeDistance;
+	// // Set target to a point slightly outside the red circle (safe distance)
+	// argos::Real redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+	// argos::Real safeDistance = redCircleRadius + 0.1;
+	// argos::CVector2 targetOnCircle = LoopFunctions->RedCirclePosition - directionToNest * safeDistance;
 	
-	SetTarget(targetOnCircle);
-	SetIsHeadingToNest(false);
+	// SetTarget(targetOnCircle);
+	// SetIsHeadingToNest(false);
 
     updateFidelity = false;
     TrailToShare.clear();
     TrailToFollow.clear();
-    	MyTrail.clear();
+    MyTrail.clear();
 
 	myTrail.clear();
 
@@ -171,6 +171,16 @@ void CPFA_controller::Reset() {
 	isHoldingFood = false;
 	isUsingSiteFidelity = false;
 	isGivingUpSearch = false;
+
+	hasStartedBoundaryFollow = false;
+	isFollowingCircleBoundary = false;
+	isPausingOnBoundary = false;
+	isHeadingToEntryPoint = false;
+	isFollowingPredefinedPath = false;
+	predefinedPathIndex = 0;
+
+	
+	
 }
 
 bool CPFA_controller::IsHoldingFood() {
