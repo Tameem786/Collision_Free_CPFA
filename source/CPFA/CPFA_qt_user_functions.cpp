@@ -112,6 +112,12 @@ void CPFA_qt_user_functions::DrawNest() {
                        0.1f);
     DrawCylinder(entryPoint, CQuaternion(), 0.05, 0.05, CColor::BLUE);
 
+    CVector3 exitPoint(loopFunctions.RedCirclePosition.GetX() + (loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier), 
+              loopFunctions.RedCirclePosition.GetY() + (loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier) - 0.7, 
+              0.1f);
+
+    DrawCylinder(exitPoint, CQuaternion(), 0.05, 0.05, CColor::RED);
+
     // SOLUTION 1: Only generate coordinates once (recommended)
     if(loopFunctions.CircleCoordinates.empty()) {
         GenerateCircleCoordinates();

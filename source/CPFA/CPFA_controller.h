@@ -58,6 +58,10 @@ class CPFA_controller : public BaseController {
 		vector<CRay3> myTrail;
 		CColor        TrailColor;
 
+		bool isCircumnavigatingRedCircle = false;
+		argos::CVector2 circumnavigationFinalTarget;
+		int circumnavigationDirection = 1; // 1 for clockwise, -1 for counterclockwise
+
 		bool isInformed;
 		bool isHoldingFood;
 		bool isUsingSiteFidelity;
@@ -77,7 +81,7 @@ class CPFA_controller : public BaseController {
 			SEARCHING = 1,
 			RETURNING = 2,
 			SURVEYING = 3,
-			STOPPING = 4,
+			EXITING = 4,
 			FOLLOWING_ENTRY_PATH = 5
 		} CPFA_state;
 
@@ -87,7 +91,7 @@ class CPFA_controller : public BaseController {
 		void Searching();
 		void Returning();
 		void Surveying();
-		void Stopping();
+		void Exiting();
 		void FollowingEntryPath();
 		bool CanEnterPredefinedPath();
 		void GeneratePredefinedPath();
@@ -99,6 +103,11 @@ class CPFA_controller : public BaseController {
 		void SetFidelityList(argos::CVector2 newFidelity);
 		void SetFidelityList();
 		bool SetTargetPheromone();
+
+		 argos::CVector2 GetRedCircleAvoidanceTarget(const argos::CVector2& desiredTarget);
+		bool IsPathThroughRedCircle(const argos::CVector2& start, const argos::CVector2& end);
+		argos::CVector2 GetCircumnavigationTarget(const argos::CVector2& currentPos, const argos::CVector2& finalTarget);
+
 
 		argos::Real GetExponentialDecay(argos::Real value, argos::Real time, argos::Real lambda);
 		argos::Real GetBound(argos::Real value, argos::Real min, argos::Real max);

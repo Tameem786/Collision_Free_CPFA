@@ -74,8 +74,8 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 
 		// Red circle (barrier) management functions
 		bool IsNearRedCircle(const argos::CVector2& position);
-		bool IsInsideRedCircle(argos::CVector2& position);
-		argos::CVector2 GetClosestEntryPoint(argos::CVector2& robotPosition);
+		bool IsInsideRedCircle(const argos::CVector2& position);
+		argos::CVector2 GetClosestExitPoint(const argos::CVector2& robotPosition);
 		argos::CVector2 GetClosestNest(argos::CVector2& robotPosition);
 		std::vector<argos::CVector2> GetAllEntryPoints();
 	

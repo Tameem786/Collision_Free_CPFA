@@ -124,11 +124,17 @@ void CPFA_controller::ControlStep() {
 	//UpdateTargetRayList();
 	CPFA();
 	Move();
+
+	// argos::LOG << "Available path to nest: ";
+	// for(const auto& nest : LoopFunctions->pathAvailableToNest) {
+	// 	argos::LOG << nest << " ";
+	// }
+	// argos::LOG << std::endl;
 }
 
 void CPFA_controller::Reset() {
- num_targets_collected =0;
- isHoldingFood   = false;
+	num_targets_collected =0;
+	isHoldingFood   = false;
     isInformed      = false;
     SearchTime      = 0;
     ResourceDensity = 0;
@@ -180,13 +186,11 @@ void CPFA_controller::CPFA() {
 	switch(CPFA_state) {
 		// depart from nest after food drop off or simulation start
 		case DEPARTING:
-			// argos::LOG << "DEPARTING" << std::endl;
 			//SetIsHeadingToNest(false);
 			Departing();
 			break;
 		// after departing(), once conditions are met, begin searching()
 		case SEARCHING:
-			// argos::LOG << "SEARCHING" << std::endl;
 			//SetIsHeadingToNest(false);
 			if((SimulationTick() % (SimulationTicksPerSecond() / 2)) == 0) {
 				Searching();
@@ -194,18 +198,15 @@ void CPFA_controller::CPFA() {
 			break;
 		// return to nest after food pick up or giving up searching()
 		case RETURNING:
-			// argos::LOG << "RETURNING" << std::endl;
 			//SetIsHeadingToNest(true);
 			Returning();
 			break;
 		case SURVEYING:
-			// argos::LOG << "SURVEYING" << std::endl;
 			//SetIsHeadingToNest(false);
 			Surveying();
 			break;
-		case STOPPING:
-			// argos::LOG << "STOPPING" << std::endl;
-			Stopping();
+		case EXITING:
+			Exiting();
 			break;
 		case FOLLOWING_ENTRY_PATH:
 			FollowingEntryPath();
@@ -298,45 +299,43 @@ void CPFA_controller::SetLoopFunctions(CPFA_loop_functions* lf) {
 
 void CPFA_controller::Departing()
 {
-    argos::Real distanceToTarget = (GetPosition() - GetTarget()).Length();
-    argos::Real randomNumber = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
+	
+	argos::Real distanceToTarget = (GetPosition() - GetTarget()).Length();
+	argos::Real randomNumber = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
 
-    // Calculate red circle radius if not already set
-    if(redCircleRadius == 0.0) {
-        redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+	// Calculate red circle radius if not already set
+	if(redCircleRadius == 0.0) {
+		redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+	}
+
+	// Update target if we're circumnavigating and need course correction
+    if(isCircumnavigatingRedCircle && !isHoldingFood) {
+        argos::CVector2 currentPos = GetPosition();
+        argos::CVector2 updatedTarget = GetRedCircleAvoidanceTarget(circumnavigationFinalTarget);
+        SetTarget(updatedTarget);
     }
 
-    // Check if current target is inside red circle (except when returning to nest)
-    // if(!isGivingUpSearch && !isHoldingFood) {
-    //     argos::Real distanceToCenter = (GetTarget() - argos::CVector2(0.0, 0.3)).Length();
-    //     if(distanceToCenter <= redCircleRadius) {
-    //         // Target is inside red circle, set a new random search location outside
-    //         SetRandomSearchLocation();
-    //         return;
-    //     }
-    // }
-
-    /* When not informed, continue to travel until randomly switching to the searching state. */
-    if((SimulationTick() % (SimulationTicksPerSecond() / 2)) == 0) {
-        if(isInformed == false){
-            if(SimulationTick()%(5*SimulationTicksPerSecond())==0 && randomNumber < LoopFunctions->ProbabilityOfSwitchingToSearching){
-                Stop();
-                SearchTime = 0;
-                CPFA_state = SEARCHING;
-                travelingTime+=SimulationTick()-startTime;
-                startTime = SimulationTick();
-            
-                argos::Real USV = LoopFunctions->UninformedSearchVariation.GetValue();
-                argos::Real rand = RNG->Gaussian(USV);
-                argos::CRadians rotation(rand);
-                argos::CRadians angle1(rotation.UnsignedNormalize());
-                argos::CRadians angle2(GetHeading().UnsignedNormalize());
-                argos::CRadians turn_angle(angle1 + angle2);
-                argos::CVector2 turn_vector(SearchStepSize, turn_angle);
-                SetIsHeadingToNest(false);
-                
-                // Ensure new search target is outside red circle
-                argos::CVector2 newTarget = turn_vector + GetPosition();
+	/* When not informed, continue to travel until randomly switching to the searching state. */
+	if((SimulationTick() % (SimulationTicksPerSecond() / 2)) == 0) {
+		if(isInformed == false){
+			if(SimulationTick()%(5*SimulationTicksPerSecond())==0 && randomNumber < LoopFunctions->ProbabilityOfSwitchingToSearching){
+				Stop();
+				SearchTime = 0;
+				CPFA_state = SEARCHING;
+				travelingTime+=SimulationTick()-startTime;
+				startTime = SimulationTick();
+			
+				argos::Real USV = LoopFunctions->UninformedSearchVariation.GetValue();
+				argos::Real rand = RNG->Gaussian(USV);
+				argos::CRadians rotation(rand);
+				argos::CRadians angle1(rotation.UnsignedNormalize());
+				argos::CRadians angle2(GetHeading().UnsignedNormalize());
+				argos::CRadians turn_angle(angle1 + angle2);
+				argos::CVector2 turn_vector(SearchStepSize, turn_angle);
+				SetIsHeadingToNest(false);
+				
+				// Ensure new search target is outside red circle
+				argos::CVector2 newTarget = turn_vector + GetPosition();
 				argos::Real distanceToCenter = (newTarget - LoopFunctions->RedCirclePosition).Length();
 				if(distanceToCenter <= redCircleRadius) {
 					// If new target is inside red circle, adjust it to be outside
@@ -344,35 +343,37 @@ void CPFA_controller::Departing()
 					newTarget = LoopFunctions->RedCirclePosition + directionFromCenter * (redCircleRadius + 0.1);
 				}
 				SetTarget(newTarget);
-                // argos::Real distanceToCenter = (newTarget - argos::CVector2(0.0, 0.3)).Length();
-                // if(distanceToCenter <= redCircleRadius) {
-                //     // If new target is inside red circle, adjust it to be outside
-                //     argos::CVector2 directionFromCenter = (newTarget - argos::CVector2(0.0, 0.3)).Normalize();
-                //     newTarget = argos::CVector2(0.0, 0.3) + directionFromCenter * (redCircleRadius + 0.1);
-                // }
-                // SetTarget(newTarget);
-            }
-            else if(distanceToTarget < TargetDistanceTolerance){
-                SetRandomSearchLocation(false);
-            }
-        }
-    }
+			}
+			else if(distanceToTarget < TargetDistanceTolerance){
+				SetRandomSearchLocation(false);
+			}
+		}
+	}
 	
-    /* Are we informed? I.E. using site fidelity or pheromones. */	
-    if(isInformed && distanceToTarget < TargetDistanceTolerance) {
-        SearchTime = 0;
-        CPFA_state = SEARCHING;
-        travelingTime+=SimulationTick()-startTime;
-        startTime = SimulationTick();
+	/* Are we informed? I.E. using site fidelity or pheromones. */	
+	if(isInformed && distanceToTarget < TargetDistanceTolerance) {
+		if(isCircumnavigatingRedCircle) {
+            // Continue circumnavigating
+            argos::CVector2 nextTarget = GetRedCircleAvoidanceTarget(circumnavigationFinalTarget);
+            SetTarget(nextTarget);
+        } else {
+			SearchTime = 0;
+			CPFA_state = SEARCHING;
+			travelingTime+=SimulationTick()-startTime;
+			startTime = SimulationTick();
 
-        if(isUsingSiteFidelity) {
-            isUsingSiteFidelity = false;
-            SetFidelityList();
-        }
-    }
+			if(isUsingSiteFidelity) {
+				isUsingSiteFidelity = false;
+				SetFidelityList();
+			}
+		}
+	}
+	
+
 }
 
 void CPFA_controller::Searching() {
+
     // "scan" for food only every half of a second
     if((SimulationTick() % (SimulationTicksPerSecond() / 2)) == 0) {
         SetHoldingFood();
@@ -388,12 +389,12 @@ void CPFA_controller::Searching() {
         }
 
         // Check if current target is inside red circle
-		argos::Real distanceToCenter = (GetTarget() - LoopFunctions->RedCirclePosition).Length();
-		if(distanceToCenter <= redCircleRadius) {
-			// Target is inside red circle, set a new random search location outside
-			SetRandomSearchLocation(false);
-			return;
-		}
+		// argos::Real distanceToCenter = (GetTarget() - LoopFunctions->RedCirclePosition).Length();
+		// if(distanceToCenter <= redCircleRadius) {
+		// 	// Target is inside red circle, set a new random search location outside
+		// 	SetRandomSearchLocation(false);
+		// 	return;
+		// }
      
         // If we reached our target search location, set a new one. The 
         // new search location calculation is different based on whether
@@ -401,7 +402,7 @@ void CPFA_controller::Searching() {
         if(distance.SquareLength() < TargetDistanceTolerance) {
             // randomly give up searching
             if(SimulationTick()% (5*SimulationTicksPerSecond())==0 && random < LoopFunctions->ProbabilityOfReturningToNest) {
-                argos::LOG << GetId() << " Given up search. Heading to red circle." << std::endl;
+                // argos::LOG << GetId() << " Given up search. Heading to red circle." << std::endl;
                 SetFidelityList();
                 TrailToShare.clear();
                 argos::CVector2 currentPos = GetPosition();
@@ -449,7 +450,7 @@ void CPFA_controller::Searching() {
             // informed search
             else {
                 SetIsHeadingToNest(false);
-                
+
                 if(IsAtTarget()) {
                     size_t t = SearchTime++;
                     argos::Real twoPi = (argos::CRadians::TWO_PI).GetValue();
@@ -690,7 +691,7 @@ void CPFA_controller::Returning() {
 			argos::Real distanceToEntry = (currentPos - entryPoint).Length();
 			
 			if(distanceToEntry < 0.2) { // Reached entry point area
-				argos::LOG << GetId() << " Reached entry point. Checking queue position." << std::endl;
+				// argos::LOG << GetId() << " Reached entry point. Checking queue position." << std::endl;
 				
 				// Initialize predefined path if not already done
 				// if(predefinedPath.empty()) {
@@ -714,7 +715,7 @@ void CPFA_controller::Returning() {
 				} else {
 					// Wait in queue - stay at entry point
 					SetTarget(entryPoint);
-					argos::LOG << GetId() << " Waiting in queue at entry point." << std::endl;
+					// argos::LOG << GetId() << " Waiting in queue at entry point." << std::endl;
 				}
 			} else {
 				// Continue following boundary FROM OUTSIDE
@@ -822,46 +823,48 @@ void CPFA_controller::FollowingEntryPath() {
 			isHoldingFood = false;
 			
 			// EXIT STRAIGHT: Set exit direction from nest outward (away from entry point)
-			// argos::CVector2 exitDirection = (GetPosition() - entryPoint).Normalize();
-			// argos::CVector2 exitTarget = LoopFunctions->RedCirclePosition + exitDirection * (redCircleRadius + 1.0);
+			argos::CVector2 exitDirection = (GetPosition() - entryPoint).Normalize();
+			argos::CVector2 exitTarget = LoopFunctions->RedCirclePosition + exitDirection * (redCircleRadius + 1.0);
 			
-			// SetTarget(exitTarget);
-			// SetIsHeadingToNest(false);
+			SetTarget(exitTarget);
+			SetIsHeadingToNest(false);
+			CPFA_state = EXITING;
+			return;
 
-			// Determine probabilistically whether to use site fidelity, pheromone trails, or random search
-			if(updateFidelity && poissonCDF_sFollowRate > r2) {
-				// Use site fidelity
-				LOG << GetId() << " Using site fidelity." << std::endl;
-				SetIsHeadingToNest(false);
-				SetTarget(SiteFidelityPosition);
-				isInformed = true;
-			}
-			else if(SetTargetPheromone()) {
-				// Use pheromone waypoints
-				LOG << GetId() << " Using pheromone waypoints." << std::endl;
-				SetIsHeadingToNest(false);
-				isInformed = true;
-				isUsingSiteFidelity = false;
-			}
-			else {
-				// Use random search
-				SetRandomSearchLocation(false);
-				SetIsHeadingToNest(false);
-				isInformed = false;
-				isUsingSiteFidelity = false;
-			}
+			// // Determine probabilistically whether to use site fidelity, pheromone trails, or random search
+			// if(updateFidelity && poissonCDF_sFollowRate > r2) {
+			// 	// Use site fidelity
+			// 	LOG << GetId() << " Using site fidelity." << std::endl;
+			// 	SetIsHeadingToNest(false);
+			// 	SetTarget(SiteFidelityPosition);
+			// 	isInformed = true;
+			// }
+			// else if(SetTargetPheromone()) {
+			// 	// Use pheromone waypoints
+			// 	LOG << GetId() << " Using pheromone waypoints." << std::endl;
+			// 	SetIsHeadingToNest(false);
+			// 	isInformed = true;
+			// 	isUsingSiteFidelity = false;
+			// }
+			// else {
+			// 	// Use random search
+			// 	SetRandomSearchLocation(false);
+			// 	SetIsHeadingToNest(false);
+			// 	isInformed = false;
+			// 	isUsingSiteFidelity = false;
+			// }
 
-			// Reset all flags for next food collection cycle
-			hasStartedBoundaryFollow = false;
-			isFollowingCircleBoundary = false;
-			isPausingOnBoundary = false;
-			isHeadingToEntryPoint = false;
-			isGivingUpSearch = false;
-			isFollowingPredefinedPath = false;
-			predefinedPathIndex = 0;
-			CPFA_state = DEPARTING;   
-			travelingTime += SimulationTick() - startTime;
-			startTime = SimulationTick();
+			// // Reset all flags for next food collection cycle
+			// hasStartedBoundaryFollow = false;
+			// isFollowingCircleBoundary = false;
+			// isPausingOnBoundary = false;
+			// isHeadingToEntryPoint = false;
+			// isGivingUpSearch = false;
+			// isFollowingPredefinedPath = false;
+			// predefinedPathIndex = 0;
+			// CPFA_state = DEPARTING;   
+			// travelingTime += SimulationTick() - startTime;
+			// startTime = SimulationTick();
 			
 
 		} else {
@@ -902,7 +905,7 @@ void CPFA_controller::GeneratePredefinedPath() {
 	// Ensure the last waypoint is at the nest center
 	// predefinedPath.push_back(argos::CVector2(0.0, 0.3)); // need to fix later.
 	
-	argos::LOG << "Generated predefined spiral path with " << predefinedPath.size() << " waypoints." << std::endl;
+	// argos::LOG << "Generated predefined spiral path with " << predefinedPath.size() << " waypoints." << std::endl;
 }
 
 // NEW: Check if robot can enter the predefined path (queue management)
@@ -913,423 +916,163 @@ bool CPFA_controller::CanEnterPredefinedPath() {
 }
 
 
-// void CPFA_controller::Returning() {
-//     //LOG<<"Returning..."<<endl;
-//     //SetHoldingFood();
-
-// 	if(isGivingUpSearch) {
-// 		// If the robot is near the red circle, bounce back after getting information.
-// 		if(LoopFunctions->IsNearRedCircle(GetPosition())) {
-// 			argos::LOG << GetId() << " Reached red circle without food - bouncing back." << std::endl;
-			
-// 			// BOUNCE BACK LOGIC: Move away from the red circle
-// 			argos::CVector2 currentPos = GetPosition();
-// 			argos::CVector2 directionAwayFromCenter = (currentPos - LoopFunctions->NestPosition).Normalize();
-			
-// 			// Calculate red circle radius if not already set
-// 			redCircleRadius = LoopFunctions->NestRadius * 5.0;
-			
-// 			// Set target to a position further away from the red circle
-// 			argos::Real bounceDistance = redCircleRadius + 1.0; // Move 1 unit beyond the red circle
-// 			argos::CVector2 bounceTarget = LoopFunctions->NestPosition + directionAwayFromCenter * bounceDistance;
-			
-// 			SetTarget(bounceTarget);
-// 			SetIsHeadingToNest(false);
-			
-// 			// Based on a Poisson CDF, the robot may or may not create a pheromone
-// 			// located at the last place it picked up food.
-// 			argos::Real poissonCDF_pLayRate    = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfLayingPheromone);
-// 			argos::Real poissonCDF_sFollowRate = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfSiteFidelity);
-// 			argos::Real r1 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-// 			argos::Real r2 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-			
-// 			if(poissonCDF_pLayRate > r1 && updateFidelity) {
-// 				TrailToShare.push_back(LoopFunctions->NestPosition);
-// 				argos::Real timeInSeconds = (argos::Real)(SimulationTick() / SimulationTicksPerSecond());
-// 				Pheromone sharedPheromone(SiteFidelityPosition, TrailToShare, timeInSeconds, LoopFunctions->RateOfPheromoneDecay, ResourceDensity);
-// 				LoopFunctions->PheromoneList.push_back(sharedPheromone);
-// 				sharedPheromone.Deactivate();
-// 			}
-// 			TrailToShare.clear();
-			
-// 			// Store the decision for next search behavior but DON'T execute it yet
-// 			if(updateFidelity && poissonCDF_sFollowRate > r2) {
-// 				// Will use site fidelity after bounce
-// 				nextSearchType = SITE_FIDELITY;
-// 			}
-// 			else if(LoopFunctions->PheromoneList.size() > 0) {
-// 				// Check if there are pheromones to follow (don't call SetTargetPheromone yet)
-// 				nextSearchType = PHEROMONE_TRAIL;
-// 			}
-// 			else {
-// 				// Will use random search after bounce
-// 				nextSearchType = RANDOM_SEARCH;
-// 			}
-			
-// 			// Set bounce state - don't reset other flags yet
-// 			isBouncing = true;
-			
-// 			argos::LOG << GetId() << " Bouncing to: " << bounceTarget.GetX() << ", " << bounceTarget.GetY() << std::endl;
-			
-// 		} else if(isBouncing) {
-// 			// Check if we've moved far enough away from the red circle or reached bounce target
-// 			argos::Real distanceFromCenter = (GetPosition() - LoopFunctions->NestPosition).Length();
-// 			argos::Real minBounceDistance = redCircleRadius + 0.5; // Minimum distance to be considered "bounced back"
-			
-// 			if(distanceFromCenter >= minBounceDistance || IsAtTarget()) {
-// 				argos::LOG << GetId() << " Bounce back complete. Starting next search phase." << std::endl;
-				
-// 				// Now execute the stored search decision
-// 				if(nextSearchType == SITE_FIDELITY) {
-// 					SetTarget(SiteFidelityPosition);
-// 					SetIsHeadingToNest(false);
-// 					isInformed = true;
-// 					isUsingSiteFidelity = true;
-// 					argos::LOG << GetId() << " Using site fidelity for next search." << std::endl;
-// 				}
-// 				else if(nextSearchType == PHEROMONE_TRAIL && SetTargetPheromone()) {
-// 					SetIsHeadingToNest(false);
-// 					isInformed = true;
-// 					isUsingSiteFidelity = false;
-// 					argos::LOG << GetId() << " Using pheromone trail for next search." << std::endl;
-// 				}
-// 				else {
-// 					// Use random search (fallback)
-// 					SetRandomSearchLocation();
-// 					SetIsHeadingToNest(false);
-// 					isInformed = false;
-// 					isUsingSiteFidelity = false;
-// 					argos::LOG << GetId() << " Using random search." << std::endl;
-// 				}
-				
-// 				// Reset all flags for next food collection cycle
-// 				hasStartedBoundaryFollow = false;
-// 				isFollowingCircleBoundary = false;
-// 				isPausingOnBoundary = false;
-// 				isHeadingToEntryPoint = false;
-// 				isGivingUpSearch = false;
-// 				isBouncing = false;
-// 				nextSearchType = RANDOM_SEARCH; // Reset search type
-// 				CPFA_state = DEPARTING;   
-// 				travelingTime += SimulationTick() - startTime;
-// 				startTime = SimulationTick();
-// 			}
-// 			// Continue moving to bounce target if not far enough yet
-// 		}
-// 	} else {
-
-// 		// SIMPLIFIED LOGIC: When robot picks up food, set target to red circle, then start boundary following
-// 		if(isHoldingFood && !hasStartedBoundaryFollow && !isFollowingCircleBoundary) {
-// 			// Calculate red circle parameters
-// 			redCircleRadius = LoopFunctions->NestRadius * 5.0;
-// 			// LoopFunctions->NestPosition = LoopFunctions->NestPosition;
-			
-// 			// Check if robot is already near the red circle
-// 			if(LoopFunctions->IsNearRedCircle(GetPosition())) {
-// 				// Robot has reached the red circle, start boundary following immediately
-// 				// argos::LOG << GetId() << " At red circle with food. Starting boundary following." << std::endl;
-				
-// 				// Calculate entry point position (north point of red circle)
-// 				entryPoint.Set(LoopFunctions->NestPosition.GetX(), 
-// 							LoopFunctions->NestPosition.GetY() + redCircleRadius);
-				
-// 				SetIsHeadingToNest(false);
-// 				hasStartedBoundaryFollow = true;
-// 				isFollowingCircleBoundary = true;
-				
-// 				// Start boundary following immediately by setting first target
-// 				argos::CVector2 currentPos = GetPosition();
-// 				argos::CVector2 relativePos = currentPos - LoopFunctions->NestPosition;
-// 				argos::Real currentAngle = atan2(relativePos.GetY(), relativePos.GetX());
-// 				argos::Real safeDistance = redCircleRadius + 0.1;
-				
-// 				// Move slightly along the circle to start the boundary following
-// 				argos::Real nextAngle = currentAngle + 0.1;
-// 				argos::CVector2 nextExternalPos(LoopFunctions->NestPosition.GetX() + safeDistance * cos(nextAngle),
-// 											LoopFunctions->NestPosition.GetY() + safeDistance * sin(nextAngle));
-// 				SetTarget(nextExternalPos);
-				
-// 				// argos::LOG << GetId() << " Starting boundary follow at angle: " << currentAngle << std::endl;
-// 			} else {
-// 				// Robot is not at red circle yet, head towards it
-// 				argos::CVector2 currentPos = GetPosition();
-// 				argos::CVector2 directionToCenter = (LoopFunctions->NestPosition - currentPos).Normalize();
-				
-// 				// Set target to a point slightly outside the red circle (safe distance)
-// 				argos::Real safeDistance = redCircleRadius + 0.1;
-// 				argos::CVector2 targetOnCircle = LoopFunctions->NestPosition - directionToCenter * safeDistance;
-				
-// 				SetTarget(targetOnCircle);
-// 				SetIsHeadingToNest(false);
-				
-// 				// argos::LOG << GetId() << " Holding food - heading to red circle at: " << targetOnCircle.GetX() << ", " << targetOnCircle.GetY() << std::endl;
-// 			}
-// 		}
-
-// 		// Follow the red circle boundary FROM OUTSIDE until reaching entry point
-// 		if(isFollowingCircleBoundary && isHoldingFood) {
-// 			// argos::LOG << GetId() << " Following external boundary" << std::endl;
-			
-// 			argos::CVector2 currentPos = GetPosition();
-			
-// 			// Calculate distance from center - robot should ALWAYS be outside the circle
-// 			argos::Real currentDistanceFromCenter = (currentPos - LoopFunctions->NestPosition).Length();
-// 			// argos::LOG << GetId() << " Distance from center: " << currentDistanceFromCenter << " (radius: " << redCircleRadius << ")" << std::endl;
-			
-// 			// CRITICAL: Maintain safe distance outside the circle
-// 			argos::Real safeDistance = redCircleRadius + 0.1; // Stay 0.15 units outside the red circle
-			
-// 			// Calculate current angle relative to circle center
-// 			argos::CVector2 relativePos = currentPos - LoopFunctions->NestPosition;
-// 			argos::Real currentAngle = atan2(relativePos.GetY(), relativePos.GetX());
-			
-// 			// Target angle is north (π/2 radians = 90 degrees) - entry point
-// 			argos::Real targetAngle = M_PI / 2.0;
-			
-// 			// Calculate angular difference (shortest path around the circle)
-// 			argos::Real angleDiff = targetAngle - currentAngle;
-// 			while(angleDiff > M_PI) angleDiff -= 2.0 * M_PI;
-// 			while(angleDiff < -M_PI) angleDiff += 2.0 * M_PI;
-			
-// 			// Check if we're close enough to entry point
-// 			argos::Real distanceToEntry = (currentPos - entryPoint).Length();
-// 			// argos::LOG << GetId() << " Distance to entry point: " << distanceToEntry << std::endl;
-			
-// 			if(distanceToEntry < 0.2) { // Reached entry point area
-// 				// argos::LOG << GetId() << " Reached entry point area. Now going straight to nest." << std::endl;
-// 				SetTarget(LoopFunctions->NestPosition);
-// 				SetIsHeadingToNest(true);
-// 				isFollowingCircleBoundary = false;
-// 				isHeadingToEntryPoint = true;
-// 			} else {
-// 				// Continue following boundary FROM OUTSIDE
-// 				argos::Real angularStep = 0.1; // Step size for movement along circle
-				
-// 				// Move along the EXTERNAL path in the direction of shortest angular distance
-// 				argos::Real nextAngle;
-// 				if(angleDiff > 0) {
-// 					nextAngle = currentAngle + angularStep;
-// 				} else {
-// 					nextAngle = currentAngle - angularStep;
-// 				}
-				
-// 				// Calculate next position OUTSIDE the circle at safe distance
-// 				argos::CVector2 nextExternalPos(LoopFunctions->NestPosition.GetX() + safeDistance * cos(nextAngle),
-// 											LoopFunctions->NestPosition.GetY() + safeDistance * sin(nextAngle));
-				
-// 				SetTarget(nextExternalPos);
-				
-// 				// argos::LOG << GetId() << " Next external position: " << nextExternalPos.GetX() << ", " << nextExternalPos.GetY() << std::endl;
-// 				// argos::LOG << GetId() << " Current angle: " << currentAngle << ", Next angle: " << nextAngle << std::endl;
-// 			}
-// 		}
-
-// 		// Check if robot reached nest from entry point
-// 		if(isHeadingToEntryPoint && IsInTheNest() && isHoldingFood) {
-// 			// argos::LOG << GetId() << " Reached nest from entry point. Dropping food." << std::endl;
-			
-// 			// Based on a Poisson CDF, the robot may or may not create a pheromone
-// 			// located at the last place it picked up food.
-// 			argos::Real poissonCDF_pLayRate    = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfLayingPheromone);
-// 			argos::Real poissonCDF_sFollowRate = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfSiteFidelity);
-// 			argos::Real r1 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-// 			argos::Real r2 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-			
-// 			// Drop off the food and display in the nest 
-// 			argos::CVector2 placementPosition;
-// 			placementPosition.Set(LoopFunctions->NestPosition.GetX()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5), 
-// 								LoopFunctions->NestPosition.GetY()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5));
-			
-// 			while((placementPosition-LoopFunctions->NestPosition).SquareLength()>pow(LoopFunctions->NestRadius/2.0-LoopFunctions->FoodRadius, 2))
-// 				placementPosition.Set(LoopFunctions->NestPosition.GetX()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5), 
-// 									LoopFunctions->NestPosition.GetY()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5));
-
-// 			LoopFunctions->CollectedFoodList.push_back(placementPosition);
-			
-// 			// Update the location of the nest
-// 			num_targets_collected++;
-// 			LoopFunctions->currNumCollectedFood++;
-// 			LoopFunctions->setScore(num_targets_collected);
-			
-// 			if(poissonCDF_pLayRate > r1 && updateFidelity) {
-// 				TrailToShare.push_back(LoopFunctions->NestPosition);
-// 				argos::Real timeInSeconds = (argos::Real)(SimulationTick() / SimulationTicksPerSecond());
-// 				Pheromone sharedPheromone(SiteFidelityPosition, TrailToShare, timeInSeconds, LoopFunctions->RateOfPheromoneDecay, ResourceDensity);
-// 				LoopFunctions->PheromoneList.push_back(sharedPheromone);
-// 				sharedPheromone.Deactivate();
-// 			}
-// 			TrailToShare.clear();
-
-// 			// Food is now dropped, update state
-// 			isHoldingFood = false;
-			
-// 			// Determine probabilistically whether to use site fidelity, pheromone trails, or random search
-// 			if(updateFidelity && poissonCDF_sFollowRate > r2) {
-// 				// Use site fidelity
-// 				SetIsHeadingToNest(false);
-// 				SetTarget(SiteFidelityPosition);
-// 				isInformed = true;
-// 				// argos::LOG << GetId() << " Using site fidelity for next search." << std::endl;
-// 			}
-// 			else if(SetTargetPheromone()) {
-// 				// Use pheromone waypoints
-// 				SetIsHeadingToNest(false);
-// 				isInformed = true;
-// 				isUsingSiteFidelity = false;
-// 				// argos::LOG << GetId() << " Using pheromone trail for next search." << std::endl;
-// 			}
-// 			else {
-// 				// Use random search
-// 				SetRandomSearchLocation();
-// 				SetIsHeadingToNest(false);
-// 				isInformed = false;
-// 				isUsingSiteFidelity = false;
-// 				// argos::LOG << GetId() << " Using random search." << std::endl;
-// 			}
-
-// 			// Reset all flags for next food collection cycle
-// 			hasStartedBoundaryFollow = false;
-// 			isFollowingCircleBoundary = false;
-// 			isPausingOnBoundary = false;
-// 			isHeadingToEntryPoint = false;
-// 			isGivingUpSearch = false;
-// 			CPFA_state = DEPARTING;   
-// 			travelingTime += SimulationTick() - startTime;
-// 			startTime = SimulationTick();
-			
-// 			// argos::LOG << GetId() << " Ready for next foraging cycle." << std::endl;
-// 		}
-// 	}
-	
-// 	// // Main navigation logic - Working
-// 	// if(LoopFunctions->IsNearRedCircle(GetPosition()) && isHoldingFood && !hasSetEntryPoint) {
-// 	// 	if(logReport) {
-// 	// 		argos::LOG << GetId() << " Reached red circle with food." << std::endl;
-// 	// 	}
+void CPFA_controller::Exiting() {
+	if(LoopFunctions->IsInsideRedCircle(GetPosition()) && !isHoldingFood) {
 		
-// 	// 	// Calculate entry point position (north point of red circle)
-// 	// 	argos::CVector2 entryPoint(LoopFunctions->NestPosition.GetX(), 
-// 	// 								LoopFunctions->NestPosition.GetY() + LoopFunctions->NestRadius * 5.0);
-		
-// 	// 	SetIsHeadingToNest(false);
-// 	// 	SetTarget(entryPoint);
-// 	// 	hasSetEntryPoint = true;
-// 	// 	isHeadingToEntryPoint = true;
-		
-// 	// 	if(logReport) {
-// 	// 		argos::LOG << "Target Point: " << GetTarget().GetX() << ", " << GetTarget().GetY() << std::endl;
-// 	// 	}
-// 	// 	logReport = false;
-// 	// }
+		CVector2 exitPoint(LoopFunctions->RedCirclePosition.GetX() + (LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier), 
+              LoopFunctions->RedCirclePosition.GetY() + (LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier) - 0.7);
+		SetTarget(exitPoint);
+		SetIsHeadingToNest(false);
+	} else {
+		argos::Real poissonCDF_sFollowRate = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfSiteFidelity);
+		argos::Real r2 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
 
-// 	// // Check if robot reached entry point
-// 	// if(isHeadingToEntryPoint && IsAtTarget()) {
-// 	// 	argos::LOG << GetId() << " Reached target point. Heading to nest." << std::endl;
-// 	// 	SetIsHeadingToNest(true);
-// 	// 	SetTarget(LoopFunctions->NestPosition);
-// 	// 	isHeadingToEntryPoint = false;
-// 	// }
-	
-// 	// // Check if robot reached nest and drop food
-// 	// if(GetIsHeadingToNest() && IsInTheNest() && isHoldingFood) {
-// 	// 	// argos::LOG << GetId() << " Reached nest." << std::endl;
-// 	// 	argos::LOG << GetId() << " Reached nest." << std::endl;
-// 	// 	// Based on a Poisson CDF, the robot may or may not create a pheromone
-// 	// 	// located at the last place it picked up food.
-// 	// 	argos::Real poissonCDF_pLayRate    = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfLayingPheromone);
-// 	// 	argos::Real poissonCDF_sFollowRate = GetPoissonCDF(ResourceDensity, LoopFunctions->RateOfSiteFidelity);
-// 	// 	argos::Real r1 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-// 	// 	argos::Real r2 = RNG->Uniform(argos::CRange<argos::Real>(0.0, 1.0));
-		
-// 	// 	// Drop off the food and display in the nest 
-// 	// 	argos::CVector2 placementPosition;
-// 	// 	placementPosition.Set(LoopFunctions->NestPosition.GetX()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5), 
-// 	// 						LoopFunctions->NestPosition.GetY()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5));
-		
-// 	// 	while((placementPosition-LoopFunctions->NestPosition).SquareLength()>pow(LoopFunctions->NestRadius/2.0-LoopFunctions->FoodRadius, 2))
-// 	// 		placementPosition.Set(LoopFunctions->NestPosition.GetX()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5), 
-// 	// 							LoopFunctions->NestPosition.GetY()+RNG->Gaussian(LoopFunctions->NestRadius/1.2, 0.5));
+		// Determine probabilistically whether to use site fidelity, pheromone trails, or random search
+		if(updateFidelity && poissonCDF_sFollowRate > r2) {
+			// Use site fidelity
+			// LOG << GetId() << " Using site fidelity." << std::endl;
+			SetIsHeadingToNest(false);
+			argos::CVector2 safeTarget = GetRedCircleAvoidanceTarget(SiteFidelityPosition);
+			SetTarget(safeTarget);
+			isInformed = true;
+		}
+		else if(SetTargetPheromone()) {
+			// Use pheromone waypoints
+			// LOG << GetId() << " Using pheromone waypoints." << std::endl;
+			SetIsHeadingToNest(false);
+			isInformed = true;
+			isUsingSiteFidelity = false;
+		}
+		else {
+			// Use random search
+			SetRandomSearchLocation(false);
+			SetIsHeadingToNest(false);
+			isInformed = false;
+			isUsingSiteFidelity = false;
+		}
 
-// 	// 	LoopFunctions->CollectedFoodList.push_back(placementPosition);
-		
-// 	// 	// Update the location of the nest
-// 	// 	num_targets_collected++;
-// 	// 	LoopFunctions->currNumCollectedFood++;
-// 	// 	LoopFunctions->setScore(num_targets_collected);
-		
-// 	// 	if(poissonCDF_pLayRate > r1 && updateFidelity) {
-// 	// 		TrailToShare.push_back(LoopFunctions->NestPosition);
-// 	// 		argos::Real timeInSeconds = (argos::Real)(SimulationTick() / SimulationTicksPerSecond());
-// 	// 		Pheromone sharedPheromone(SiteFidelityPosition, TrailToShare, timeInSeconds, LoopFunctions->RateOfPheromoneDecay, ResourceDensity);
-// 	// 		LoopFunctions->PheromoneList.push_back(sharedPheromone);
-// 	// 		sharedPheromone.Deactivate();
-// 	// 	}
-// 	// 	TrailToShare.clear();
+		// Reset all flags for next food collection cycle
+		hasStartedBoundaryFollow = false;
+		isFollowingCircleBoundary = false;
+		isPausingOnBoundary = false;
+		isHeadingToEntryPoint = false;
+		isGivingUpSearch = false;
+		isFollowingPredefinedPath = false;
+		predefinedPathIndex = 0;
+		CPFA_state = DEPARTING;  
+		// CPFA_state = RETURNING;
+		travelingTime += SimulationTick() - startTime;
+		startTime = SimulationTick();
+	}
+}
 
-// 	// 	// Determine probabilistically whether to use site fidelity, pheromone trails, or random search
-// 	// 	//ofstream log_output_stream;
-// 	// 	//log_output_stream.open("cpfa_log.txt", ios::app);
-// 	// 	//log_output_stream << "At the nest." << endl;	    
-	 
-// 	//     // use site fidelity
-// 	// 	if(updateFidelity && poissonCDF_sFollowRate > r2) {
-// 	// 		//log_output_stream << "Using site fidelity" << endl;
-// 	// 			SetIsHeadingToNest(false);
-// 	// 			SetTarget(SiteFidelityPosition);
-// 	// 			isInformed = true;
-// 	// 	}
-//     //   // use pheromone waypoints
-//     //   else if(SetTargetPheromone()) {
-//     //       //log_output_stream << "Using site pheremone" << endl;
-//     //       isInformed = true;
-//     //       isUsingSiteFidelity = false;
-//     //   }
-//     //    // use random search
-//     //   else {
-//     //        //log_output_stream << "Using random search" << endl;
-//     //         SetRandomSearchLocation();
-//     //         isInformed = false;
-//     //         isUsingSiteFidelity = false;
-//     //   }
+// Method to check if a direct path would go through the red circle
+bool CPFA_controller::IsPathThroughRedCircle(const argos::CVector2& start, const argos::CVector2& end) {
+    if(isHoldingFood) return false; // Allow passage when carrying food
+    
+    // Calculate red circle radius if not set
+    if(redCircleRadius == 0.0) {
+        redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+    }
+    
+    argos::CVector2 circleCenter = LoopFunctions->RedCirclePosition;
+    
+    // Vector from start to end
+    argos::CVector2 pathVector = end - start;
+    argos::Real pathLength = pathVector.Length();
+    
+    // If path is very short, don't bother checking
+    if(pathLength < 0.1) return false;
+    
+    argos::CVector2 pathDirection = pathVector.Normalize();
+    
+    // Vector from start to circle center
+    argos::CVector2 toCenter = circleCenter - start;
+    
+    // Project toCenter onto path direction to find closest point on path to circle center
+    argos::Real projectionLength = toCenter.DotProduct(pathDirection);
+    
+    // Clamp projection to path bounds
+    projectionLength = std::max(0.0, std::min(pathLength, projectionLength));
+    
+    // Find closest point on path to circle center
+    argos::CVector2 closestPoint = start + pathDirection * projectionLength;
+    
+    // Check if closest point is within the red circle (with small buffer)
+    argos::Real distanceToCenter = (closestPoint - circleCenter).Length();
+    argos::Real safeRadius = redCircleRadius + 0.2; // Add buffer
+    
+    return distanceToCenter < safeRadius;
+}
 
-// 	// 	isGivingUpSearch = false;
-// 	// 	CPFA_state = DEPARTING;   
-//     //     isHoldingFood = false; 
-//     //     travelingTime+=SimulationTick()-startTime;//qilu 10/22
-//     //     startTime = SimulationTick();//qilu 10/22
-                
-//     // }
-// 	// Take a small step towards the nest so we don't overshoot by too much is we miss it
-//     // else 
-//     // {
-//     //     if(IsAtTarget())
-//     //     {
-//     //     // argos::LOG << GetId() << " Heading to nest." << std::endl;
-//     //     //SetIsHeadingToNest(false); // Turn off error for this
-//     //     //SetTarget(LoopFunctions->NestPosition);
-//     //     //randomly search for the nest
-//     //     argos::Real USCV = LoopFunctions->UninformedSearchVariation.GetValue();
-//     //     argos::Real rand = RNG->Gaussian(USCV);
-
-//     //     argos::CRadians rotation(rand);
-//     //     argos::CRadians angle1(rotation);
-//     //     argos::CRadians angle2(GetHeading());
-//     //     argos::CRadians turn_angle(angle1 + angle2);
-//     //     argos::CVector2 turn_vector(SearchStepSize, turn_angle);
-//     //     SetIsHeadingToNest(false);
-//     //     SetTarget(turn_vector + GetPosition());
-//     //     }
-//     //     //detect other robots in its camera view
+// Method to get circumnavigation target around red circle
+argos::CVector2 CPFA_controller::GetCircumnavigationTarget(const argos::CVector2& currentPos, const argos::CVector2& finalTarget) {
+    argos::CVector2 circleCenter = LoopFunctions->RedCirclePosition;
+    argos::Real safeRadius = redCircleRadius + 0.3; // Safe distance from red circle
+    
+    // If this is the start of circumnavigation, determine direction
+    if(!isCircumnavigatingRedCircle) {
+        isCircumnavigatingRedCircle = true;
+        circumnavigationFinalTarget = finalTarget;
         
-//     // }		   
-// }
+        // Determine circumnavigation direction based on which way is shorter
+        argos::CVector2 currentRelative = currentPos - circleCenter;
+        argos::CVector2 targetRelative = finalTarget - circleCenter;
+        
+        argos::Real currentAngle = atan2(currentRelative.GetY(), currentRelative.GetX());
+        argos::Real targetAngle = atan2(targetRelative.GetY(), targetRelative.GetX());
+        
+        argos::Real clockwiseDistance = targetAngle - currentAngle;
+        if(clockwiseDistance < 0) clockwiseDistance += 2.0 * M_PI;
+        
+        argos::Real counterClockwiseDistance = 2.0 * M_PI - clockwiseDistance;
+        
+        // Choose shorter path
+        circumnavigationDirection = (clockwiseDistance <= counterClockwiseDistance) ? 1 : -1;
+    }
+    
+    // Calculate current angle relative to circle center
+    argos::CVector2 currentRelative = currentPos - circleCenter;
+    argos::Real currentAngle = atan2(currentRelative.GetY(), currentRelative.GetX());
+    
+    // Move along the circle boundary in the chosen direction
+    argos::Real angularStep = 0.2 * circumnavigationDirection; // Adjust step size as needed
+    argos::Real nextAngle = currentAngle + angularStep;
+    
+    // Calculate next target position on circle boundary
+    argos::CVector2 nextTarget(
+        circleCenter.GetX() + safeRadius * cos(nextAngle),
+        circleCenter.GetY() + safeRadius * sin(nextAngle)
+    );
+    
+    return nextTarget;
+}
 
-void CPFA_controller::Stopping() {
-	argos::LOG << GetId() << " Reached red circle, stopping." << std::endl;
-	CVector2 nextTarget(LoopFunctions->RedCirclePosition.GetX(), 
-				LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier);
-	SetIsHeadingToNest(false);
-	SetTarget(nextTarget);
+// Method to get target that avoids red circle
+argos::CVector2 CPFA_controller::GetRedCircleAvoidanceTarget(const argos::CVector2& desiredTarget) {
+    argos::CVector2 currentPos = GetPosition();
+    
+    // Check if we're currently circumnavigating
+    if(isCircumnavigatingRedCircle) {
+        // Check if we can now go directly to final target
+        if(!IsPathThroughRedCircle(currentPos, circumnavigationFinalTarget)) {
+            // We can go directly now
+            isCircumnavigatingRedCircle = false;
+            return circumnavigationFinalTarget;
+        } else {
+            // Continue circumnavigating
+            return GetCircumnavigationTarget(currentPos, circumnavigationFinalTarget);
+        }
+    }
+    
+    // Check if direct path would go through red circle
+    if(IsPathThroughRedCircle(currentPos, desiredTarget)) {
+        // Start circumnavigation
+        return GetCircumnavigationTarget(currentPos, desiredTarget);
+    }
+    
+    // Direct path is safe
+    return desiredTarget;
 }
 
 void CPFA_controller::SetRandomSearchLocation(bool isExit) {

@@ -57,7 +57,7 @@ void CPFA_loop_functions::AddRobotToPathQueueToNest(int nestIndex, const std::st
         if (it == queue.end()) {
             queue.push_back(robotId);
             pathAvailableToNest[nestIndex] = false;  // Path is now occupied
-            LOG << "Robot " << robotId << " added to path queue " << nestIndex << std::endl;
+            // LOG << "Robot " << robotId << " added to path queue " << nestIndex << std::endl;
         }
     }
 }
@@ -315,7 +315,7 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
                           0.1f);
     SpiralPathCoordinates.push_back(anotherPoint);
 
-    LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
+    // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
 
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
         Real radian = i * (M_PI / 180.0f);
@@ -326,7 +326,7 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
         SpiralPathCoordinates.push_back(point);
     }
 
-	for(UInt32 i = 0; i < SpiralPathCoordinates.size(); ++i) {
+	for(UInt32 i = 0; i <= SpiralPathCoordinates.size(); ++i) {
 		SpiralPathCoordinatesForController.push_back(
 			CVector2(SpiralPathCoordinates[i].GetX(), SpiralPathCoordinates[i].GetY()));
 	}
@@ -866,25 +866,25 @@ bool CPFA_loop_functions::IsNearRedCircle(const argos::CVector2& p) {
     argos::Real distance = (p - RedCirclePosition).Length();
     
     // Check if the position is near the red circle (within a small tolerance)
-    argos::Real tolerance = 0.1; // 10cm tolerance
+    argos::Real tolerance = 0.15; // 15cm tolerance
     // return std::abs(distance - redCircleRadius) < tolerance;
 	return (distance >= (redCircleRadius - tolerance) && 
             distance <= (redCircleRadius + tolerance));
 }
 
 // Check if robot is inside the red circle
-bool CPFA_loop_functions::IsInsideRedCircle(argos::CVector2& position) {
+bool CPFA_loop_functions::IsInsideRedCircle(const argos::CVector2& position) {
     argos::Real redCircleRadius = NestRadius * RedCircleRadiusMultiplier;
     argos::Real distanceToCenter = (position - RedCirclePosition).Length();
     return (distanceToCenter < redCircleRadius);
 }
 
 // Get the closest entry point on the red circle
-argos::CVector2 CPFA_loop_functions::GetClosestEntryPoint(argos::CVector2& robotPosition) {
+argos::CVector2 CPFA_loop_functions::GetClosestExitPoint(const argos::CVector2& robotPosition) {
     // For your diagram, the entry point appears to be at the bottom (south)
     argos::Real redCircleRadius = NestRadius * RedCircleRadiusMultiplier;
-    argos::CVector2 entryPoint(RedCirclePosition.GetX(), RedCirclePosition.GetY()-redCircleRadius);
-    return entryPoint;
+    argos::CVector2 exitPoint(RedCirclePosition.GetX()+redCircleRadius, RedCirclePosition.GetY()+redCircleRadius-0.7);
+    return exitPoint;
 }
 
 REGISTER_LOOP_FUNCTIONS(CPFA_loop_functions, "CPFA_loop_functions")
