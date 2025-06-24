@@ -44,38 +44,46 @@ CPFA_loop_functions::CPFA_loop_functions() :
 	score(0),
 	PrintFinalScore(0),
 	maxPathQueueSize(50),
-	RedCircleRadiusMultiplier(20.0)
+	RedCircleRadiusMultiplier(20.0),
+	lastWaitingQueueIndexForNest(-1),
+	waitingQueueForNest(20, false)
 {}
 
 void CPFA_loop_functions::AddRobotToPathQueueToNest(int nestIndex, const std::string& robotId) {
     if (nestIndex >= 0 && nestIndex < 4) {
-        auto& queue = (nestIndex == 0) ? pathQueueToNest1 : 
-                     (nestIndex == 1) ? pathQueueToNest2 :
-                     (nestIndex == 2) ? pathQueueToNest3 : pathQueueToNest4;
         
-        auto it = std::find(queue.begin(), queue.end(), robotId);
-        if (it == queue.end()) {
-            queue.push_back(robotId);
-            pathAvailableToNest[nestIndex] = false;  // Path is now occupied
-            // LOG << "Robot " << robotId << " added to path queue " << nestIndex << std::endl;
-        }
+        pathAvailableToNest[nestIndex] = false;
+
+        // auto& queue = (nestIndex == 0) ? pathQueueToNest1 : 
+        //              (nestIndex == 1) ? pathQueueToNest2 :
+        //              (nestIndex == 2) ? pathQueueToNest3 : pathQueueToNest4;
+        
+        // auto it = std::find(queue.begin(), queue.end(), robotId);
+        // if (it == queue.end()) {
+        //     queue.push_back(robotId);
+        //     pathAvailableToNest[nestIndex] = false;  // Path is now occupied
+        //     // LOG << "Robot " << robotId << " added to path queue " << nestIndex << std::endl;
+        // }
     }
 }
 
 void CPFA_loop_functions::RemoveRobotFromPathQueueToNest(int nestIndex, const std::string& robotId) {
     if (nestIndex >= 0 && nestIndex < 4) {
-        auto& queue = (nestIndex == 0) ? pathQueueToNest1 : 
-                     (nestIndex == 1) ? pathQueueToNest2 :
-                     (nestIndex == 2) ? pathQueueToNest3 : pathQueueToNest4;
         
-        auto it = std::find(queue.begin(), queue.end(), robotId);
-        if (it != queue.end()) {
-            queue.erase(it);
-            if (queue.empty()) {
-                pathAvailableToNest[nestIndex] = true;  // Path is now free
-            }
-            LOG << "Robot " << robotId << " removed from path queue " << nestIndex << std::endl;
-        }
+        pathAvailableToNest[nestIndex] = true;
+        
+        // auto& queue = (nestIndex == 0) ? pathQueueToNest1 : 
+        //              (nestIndex == 1) ? pathQueueToNest2 :
+        //              (nestIndex == 2) ? pathQueueToNest3 : pathQueueToNest4;
+        
+        // auto it = std::find(queue.begin(), queue.end(), robotId);
+        // if (it != queue.end()) {
+        //     queue.erase(it);
+        //     if (queue.empty()) {
+        //         pathAvailableToNest[nestIndex] = true;  // Path is now free
+        //     }
+        //     LOG << "Robot " << robotId << " removed from path queue " << nestIndex << std::endl;
+        // }
     }
 }
 
@@ -196,9 +204,9 @@ void CPFA_loop_functions::Init(argos::TConfigurationNode &node) {
 		// argos::LOG << "Nest Position: " << x << ", " << y << std::endl;
 	}
 	//print content of nest_positions
-	for (const auto& pos : NestPositions) {
-		argos::LOG << "Nest Position: " << pos.GetX() << ", " << pos.GetY() << std::endl;
-	}
+	// for (const auto& pos : NestPositions) {
+	// 	argos::LOG << "Nest Position: " << pos.GetX() << ", " << pos.GetY() << std::endl;
+	// }
     FoodRadiusSquared = FoodRadius*FoodRadius;
 
     //Number of distributed foods
@@ -260,18 +268,401 @@ void CPFA_loop_functions::Init(argos::TConfigurationNode &node) {
  
 }
 
+bool CPFA_loop_functions::IsFirstInQueue(const std::string& robotId) {
+    if(robotQueue.empty()) {
+        return false;
+    }
+    return robotQueue.front().robotId == robotId;
+}
+
+int CPFA_loop_functions::AddToQueue(const std::string& robotId) {
+    // Check if robot is already in queue
+    int existingIndex = FindRobotInQueue(robotId);
+    if(existingIndex != -1) {
+        argos::LOG << "Robot " << robotId << " is already in queue" << std::endl;
+        return robotQueue[existingIndex].positionIndex;
+    }
+    
+    // Find next available queue position
+    int availablePosition = GetNextAvailableQueuePosition();
+    if(availablePosition == -1) {
+        argos::LOG << "Error: No available queue positions for robot " << robotId << std::endl;
+        return -1;
+    }
+    
+    // Mark position as occupied
+    waitingQueuePositionsAvailability[availablePosition] = false;
+    
+    // Add robot to queue
+    QueueEntry newEntry(robotId, availablePosition);
+    robotQueue.push_back(newEntry);
+    
+    // argos::LOG << "Robot " << robotId << " added to queue at position index " << availablePosition 
+    //            << " (x=" << waitingQueuePositions[availablePosition].GetX() 
+    //            << ", y=" << waitingQueuePositions[availablePosition].GetY() << ")" << std::endl;
+    
+    return availablePosition;
+}
+
+void CPFA_loop_functions::RemoveFromQueue(const std::string& robotId) {
+    // Find robot in queue
+    auto it = std::find_if(robotQueue.begin(), robotQueue.end(),
+        [&robotId](const QueueEntry& entry) {
+            return entry.robotId == robotId;
+        });
+    
+    if(it != robotQueue.end()) {
+        int positionIndex = it->positionIndex;
+        
+        argos::LOG << "Robot " << robotId << " removed from queue position " << positionIndex << std::endl;
+        
+        // Mark position as available
+        waitingQueuePositionsAvailability[positionIndex] = true;
+        
+        // Remove from queue
+        robotQueue.erase(it);
+        
+        // Update positions for remaining robots (move them forward)
+        UpdateQueuePositions();
+    } else {
+        argos::LOG << "Warning: Robot " << robotId << " not found in queue for removal" << std::endl;
+    }
+}
+
+int CPFA_loop_functions::GetCurrentQueueLength() {
+    return robotQueue.size();
+}
+
+argos::CVector2 CPFA_loop_functions::GetUpdatedQueuePosition(const std::string& robotId) {
+    int robotIndex = FindRobotInQueue(robotId);
+    if(robotIndex == -1) {
+        argos::LOG << "Warning: Robot " << robotId << " not found in queue" << std::endl;
+        return argos::CVector2(0.0, 0.0);
+    }
+    
+    int positionIndex = robotQueue[robotIndex].positionIndex;
+    return waitingQueuePositions[positionIndex];
+}
+
+void CPFA_loop_functions::UpdateQueuePositions() {
+    if(robotQueue.empty()) return;
+    
+    // Sort robots by their current position index to maintain order
+    std::sort(robotQueue.begin(), robotQueue.end(),
+        [](const QueueEntry& a, const QueueEntry& b) {
+            return a.positionIndex < b.positionIndex;
+        });
+    
+    // Try to move robots forward to earlier positions if available
+    for(size_t i = 0; i < robotQueue.size(); ++i) {
+        int currentPos = robotQueue[i].positionIndex;
+        
+        // Look for an earlier available position
+        for(int j = 0; j < currentPos; ++j) {
+            if(waitingQueuePositionsAvailability[j]) {
+                // Move robot to earlier position
+                waitingQueuePositionsAvailability[currentPos] = true;  // Free old position
+                waitingQueuePositionsAvailability[j] = false;          // Occupy new position
+                robotQueue[i].positionIndex = j;
+                
+                argos::LOG << "Robot " << robotQueue[i].robotId << " moved forward from position " 
+                           << currentPos << " to position " << j << std::endl;
+                break;
+            }
+        }
+    }
+    
+    // Sort again after updates
+    std::sort(robotQueue.begin(), robotQueue.end(),
+        [](const QueueEntry& a, const QueueEntry& b) {
+            return a.positionIndex < b.positionIndex;
+        });
+}
+
+int CPFA_loop_functions::FindRobotInQueue(const std::string& robotId) {
+    for(size_t i = 0; i < robotQueue.size(); ++i) {
+        if(robotQueue[i].robotId == robotId) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int CPFA_loop_functions::GetNextAvailableQueuePosition() {
+    // Find the first available position in the queue
+    for(size_t i = 0; i < waitingQueuePositionsAvailability.size(); ++i) {
+        if(waitingQueuePositionsAvailability[i]) {
+            return i;
+        }
+    }
+    return -1; // No available positions
+}
+
+void CPFA_loop_functions::PrintQueueStatus() {
+    argos::LOG << "=== Queue Status ===" << std::endl;
+    argos::LOG << "Queue length: " << robotQueue.size() << std::endl;
+    argos::LOG << "Available positions: ";
+    
+    int availableCount = 0;
+    for(size_t i = 0; i < waitingQueuePositionsAvailability.size(); ++i) {
+        if(waitingQueuePositionsAvailability[i]) {
+            availableCount++;
+        }
+    }
+    argos::LOG << availableCount << "/" << waitingQueuePositionsAvailability.size() << std::endl;
+    
+    for(size_t i = 0; i < robotQueue.size(); ++i) {
+        int posIndex = robotQueue[i].positionIndex;
+        argos::LOG << "Robot " << robotQueue[i].robotId << " at queue position " << posIndex
+                   << " (x=" << waitingQueuePositions[posIndex].GetX() 
+                   << ", y=" << waitingQueuePositions[posIndex].GetY() << ")" << std::endl;
+    }
+    argos::LOG << "===================" << std::endl;
+}
+
+// Additional helper methods
+
+bool CPFA_loop_functions::IsQueueFull() {
+    return GetNextAvailableQueuePosition() == -1;
+}
+
+bool CPFA_loop_functions::IsQueueEmpty() {
+    return robotQueue.empty();
+}
+
+std::vector<std::string> CPFA_loop_functions::GetQueuedRobotIds() {
+    std::vector<std::string> robotIds;
+    for(const auto& entry : robotQueue) {
+        robotIds.push_back(entry.robotId);
+    }
+    return robotIds;
+}
+
+// Method to check if a robot should move forward in queue
+bool CPFA_loop_functions::ShouldRobotMoveForward(const std::string& robotId, const argos::CVector2& currentPos) {
+    int robotIndex = FindRobotInQueue(robotId);
+    if(robotIndex == -1) return false;
+    
+    int positionIndex = robotQueue[robotIndex].positionIndex;
+    argos::CVector2 targetPos = waitingQueuePositions[positionIndex];
+    argos::Real distance = (targetPos - currentPos).Length();
+    
+    // Robot should move if it's more than a small threshold away from target position
+    return distance > 0.1;
+}
+
+// Initialize/Reset queue system
+void CPFA_loop_functions::ResetQueue() {
+    // Clear the robot queue
+    robotQueue.clear();
+    
+    // Mark all queue positions as available
+    std::fill(waitingQueuePositionsAvailability.begin(), 
+              waitingQueuePositionsAvailability.end(), true);
+    
+    argos::LOG << "Queue system reset - " << waitingQueuePositions.size() 
+               << " positions available" << std::endl;
+}
+
+CircleEntry CPFA_loop_functions::IsNearFirstInnerCircle(const argos::CVector2& position) {
+    for(int i = 0; i < FirstInnerCircleCoordinates.size(); i++) {
+        if((FirstInnerCircleCoordinates[i] - position).Length() < 0.15) {
+            for(int j = 0; j < SpiralPathCoordinatesForController.size(); j++) {
+                if(SpiralPathCoordinatesForController[j] == FirstInnerCircleCoordinates[i]) {
+                    return CircleEntry(true, j);
+                }
+            }
+        }
+    }
+    return CircleEntry(false, -1);
+}
+
+CircleEntry CPFA_loop_functions::IsNearSecondInnerCircle(const argos::CVector2& position) {
+    for(int i = 0; i < SecondInnerCircleCoordinates.size(); i++) {
+        if((SecondInnerCircleCoordinates[i] - position).Length() < 0.15) {
+            for(int j = 0; j < SpiralPathCoordinatesForController.size(); j++) {
+                if(SpiralPathCoordinatesForController[j] == SecondInnerCircleCoordinates[i]) {
+                    return CircleEntry(true, j);
+                }
+            }
+        }
+    }
+    return CircleEntry(false, -1);
+}
+
+CircleEntry CPFA_loop_functions::IsNearThirdInnerCircle(const argos::CVector2& position) {
+    for(int i = 0; i < ThirdInnerCircleCoordinates.size(); i++) {
+        if((ThirdInnerCircleCoordinates[i] - position).Length() < 0.15) {
+            for(int j = 0; j < SpiralPathCoordinatesForController.size(); j++) {
+                if(SpiralPathCoordinatesForController[j] == ThirdInnerCircleCoordinates[i]) {
+                    return CircleEntry(true, j);
+                }
+            }
+        }
+    }
+    return CircleEntry(false, -1);
+}
+
+void CPFA_loop_functions::SetNestsPredefinedEntryPathCoordinates() {
+    nest1EntryPoints.clear();
+	nest2EntryPoints.clear();
+	nest3EntryPoints.clear();
+	nest4EntryPoints.clear();
+
+    CVector3 lastPoint1 = SpiralPathCoordinates.back();
+    CVector3 lastPoint2 = SpiralPathCoordinates.back();
+    CVector3 lastPoint3 = SpiralPathCoordinates.back();
+    CVector3 lastPoint4 = SpiralPathCoordinates.back();
+
+    nest1EntryPoints.push_back(lastPoint1);
+    nest2EntryPoints.push_back(lastPoint2);
+    nest3EntryPoints.push_back(lastPoint3);
+    nest4EntryPoints.push_back(lastPoint4);
+
+    for(int i = 0; i < 9; i++) {
+        lastPoint1.Set(lastPoint1.GetX(), lastPoint1.GetY() + 0.05f, 0.0f);
+        nest1EntryPoints.push_back(lastPoint1);
+    }
+
+    for(int i = 0; i < 8; i++) {
+        lastPoint1.Set(lastPoint1.GetX()+ 0.05f, lastPoint1.GetY(), 0.0f);
+        nest1EntryPoints.push_back(lastPoint1);
+    }
+
+    for(int i = 0; i < 5; i++) {
+        lastPoint2.Set(lastPoint2.GetX() - 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
+        nest2EntryPoints.push_back(lastPoint2);
+    }
+
+    for(int i = 0; i < 9; i++) {
+        lastPoint2.Set(lastPoint2.GetX(), lastPoint2.GetY() + 0.05f, 0.0f);
+        nest2EntryPoints.push_back(lastPoint2);
+    }
+
+    for(int i = 0; i < 7; i++) {
+        lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY(), 0.0f);
+        nest2EntryPoints.push_back(lastPoint2);
+    }
+
+    for(int i = 0; i < 8; i++) {
+        lastPoint3.Set(lastPoint3.GetX() - 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
+        nest3EntryPoints.push_back(lastPoint3);
+    }
+
+    for(int i = 0; i < 12; i++) {
+        lastPoint3.Set(lastPoint3.GetX(), lastPoint3.GetY() + 0.05f, 0.0f);
+        nest3EntryPoints.push_back(lastPoint3);
+    }
+
+    for(int i = 0; i < 16; i++) {
+        lastPoint3.Set(lastPoint3.GetX() + 0.05f, lastPoint3.GetY(), 0.0f);
+        nest3EntryPoints.push_back(lastPoint3);
+    }
+
+    for(int i = 0; i < 4; i++) {
+        lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
+        nest4EntryPoints.push_back(lastPoint4);
+    }
+
+    for(int i = 0; i < 17; i++) {
+        lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
+        nest4EntryPoints.push_back(lastPoint4);
+    }
+
+    for(int i = 0; i < 8; i++) {
+        lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
+        nest4EntryPoints.push_back(lastPoint4);
+    }
+
+}
+
+void CPFA_loop_functions::SetNestsPredefinedExitPathCoordinates() {
+    nest1ExitPoints.clear();
+	nest2ExitPoints.clear();
+	nest3ExitPoints.clear();
+	nest4ExitPoints.clear();
+
+    CVector3 lastPoint1 = CVector3(NestPositions[3].GetX(), NestPositions[3].GetY(), 0.0f);
+    CVector3 lastPoint2 = CVector3(NestPositions[2].GetX(), NestPositions[2].GetY(), 0.0f);
+    CVector3 lastPoint3 = CVector3(NestPositions[1].GetX(), NestPositions[1].GetY(), 0.0f);
+    CVector3 lastPoint4 = CVector3(NestPositions[0].GetX(), NestPositions[0].GetY(), 0.0f);
+
+    nest1ExitPoints.push_back(lastPoint1);
+    nest2ExitPoints.push_back(lastPoint2);
+    nest3ExitPoints.push_back(lastPoint3);
+    nest4ExitPoints.push_back(lastPoint4);
+
+    for(int i = 0; i < 6; i++) {
+        lastPoint1.Set(lastPoint1.GetX()+ 0.05f, lastPoint1.GetY(), 0.0f);
+        nest1ExitPoints.push_back(lastPoint1);
+    }
+
+    for(int i = 0; i < 35; i++) {
+        lastPoint1.Set(lastPoint1.GetX() + 0.045f, lastPoint1.GetY() + 0.05f, 0.0f);
+        nest1ExitPoints.push_back(lastPoint1);
+    }
+
+    for(int i = 0; i < 6; i++) {
+        lastPoint2.Set(lastPoint2.GetX(), lastPoint2.GetY() + 0.05f, 0.0f);
+        nest2ExitPoints.push_back(lastPoint2);
+    }
+
+    for(int i = 0; i < 35; i++) {
+        lastPoint2.Set(lastPoint2.GetX() + 0.045f, lastPoint2.GetY() + 0.05f, 0.0f);
+        nest2ExitPoints.push_back(lastPoint2);
+    }
+
+    
+
+    for(int i = 0; i < 6; i++) {
+        lastPoint3.Set(lastPoint3.GetX()+ 0.05f, lastPoint3.GetY(), 0.0f);
+        nest3ExitPoints.push_back(lastPoint3);
+    }
+
+    for(int i = 0; i < 8; i++) {
+        lastPoint3.Set(lastPoint3.GetX(), lastPoint3.GetY() + 0.05f, 0.0f);
+        nest3ExitPoints.push_back(lastPoint3);
+    }
+
+    for(int i = 0; i < 20; i++) {
+        lastPoint3.Set(lastPoint3.GetX() + 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
+        nest3ExitPoints.push_back(lastPoint3);
+    }
+
+    // Move Left
+    for(int i = 0; i < 10; i++) {
+        lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
+        nest4ExitPoints.push_back(lastPoint4);
+    }
+    // Move Up
+    for(int i = 0; i < 10; i++) {
+        lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
+        nest4ExitPoints.push_back(lastPoint4);
+    }
+     // Move Left
+    for(int i = 0; i < 20; i++) {
+        lastPoint4.Set(lastPoint4.GetX() + 0.04f, lastPoint4.GetY() + 0.05f, 0.0f);
+        nest4ExitPoints.push_back(lastPoint4);
+    }
+}
+
 void CPFA_loop_functions::SetSpiralPathCoordinates() {
 	SpiralPathCoordinates.clear();
 	SpiralPathCoordinatesForController.clear();
+    
+    FirstInnerCircleCoordinates.clear();
+    SecondInnerCircleCoordinates.clear();
+    ThirdInnerCircleCoordinates.clear();
+    FourthInnerCircleCoordinates.clear();
     
     const Real fRedCircleRadius = NestRadius * RedCircleRadiusMultiplier;
     const CVector2 center = RedCirclePosition;
 
     // Entry point (bottom of the outer circle)
-    CVector3 entryPoint(center.GetX(), 
+    entryPoint.Set(center.GetX(), 
                        center.GetY() + fRedCircleRadius,
                        0.1f);
-    LOG << "entryPoint: " << entryPoint.GetX() << ", " << entryPoint.GetY() << std::endl;
+    // LOG << "entryPoint: " << entryPoint.GetX() << ", " << entryPoint.GetY() << std::endl;
     SpiralPathCoordinates.push_back(entryPoint);
     
     // Specific point inside the red circle (you can adjust this)
@@ -279,51 +670,86 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
                        center.GetY() + (fRedCircleRadius * 0.9f),   // 40% radius down
                        0.1f);
 
-    LOG << "startPoint: " << startPoint.GetX() << ", " << startPoint.GetY() << std::endl;
+    // LOG << "startPoint: " << startPoint.GetX() << ", " << startPoint.GetY() << std::endl;
     
     SpiralPathCoordinates.push_back(startPoint);
     
     const UInt32 unNumPoints = 270;
+    Real arc_degree = 290.0f;
    
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
-        Real radian = i * (M_PI / 180.0f);
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
         CVector3 point((fRedCircleRadius*0.9f) * Sin(CRadians(-radian)),
                        (fRedCircleRadius*0.9f) * Cos(CRadians(-radian)),
                        0.1f);
         // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         SpiralPathCoordinates.push_back(point);
+        FirstInnerCircleCoordinates.push_back(CVector2(point.GetX(), point.GetY()));
     }
 
-    CVector3 anotherPoint(center.GetX() + (fRedCircleRadius * 0.75f),
-                          center.GetY(),
-                          0.1f);
+    float t = 0.15f; // 20% of the distance to the center
+    CVector3 lastPoint = SpiralPathCoordinates.back();
+    CVector3 anotherPoint(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
+
     SpiralPathCoordinates.push_back(anotherPoint);
 
-    // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
+    // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
 
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
-        Real radian = i * (M_PI / 180.0f);
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
         CVector3 point((fRedCircleRadius*0.75f) * Cos(CRadians(-radian)),
                        (fRedCircleRadius*0.75f) * Sin(CRadians(-radian)),
                        0.1f);
         // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         SpiralPathCoordinates.push_back(point);
+        SecondInnerCircleCoordinates.push_back(CVector2(point.GetX(), point.GetY()));
     }
 
-    anotherPoint.Set(center.GetX(),
-                          center.GetY() + (fRedCircleRadius * 0.6f),
-                          0.1f);
+    lastPoint = SpiralPathCoordinates.back();
+    anotherPoint.Set(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
     SpiralPathCoordinates.push_back(anotherPoint);
 
-    // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
+    // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
 
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
-        Real radian = i * (M_PI / 180.0f);
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
         CVector3 point((fRedCircleRadius*0.6f) * Sin(CRadians(-radian)),
                        (fRedCircleRadius*0.6f) * Cos(CRadians(-radian)),
                        0.1f);
         // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         SpiralPathCoordinates.push_back(point);
+        ThirdInnerCircleCoordinates.push_back(CVector2(point.GetX(), point.GetY()));
+    }
+
+    lastPoint = SpiralPathCoordinates.back();
+    anotherPoint.Set(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
+    SpiralPathCoordinates.push_back(anotherPoint);
+
+    arc_degree = 125.0f;
+    for(UInt32 i = 0; i <= unNumPoints; ++i) {
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+        CVector3 point((fRedCircleRadius*0.45f) * Cos(CRadians(-radian)),
+                       (fRedCircleRadius*0.45f) * Sin(CRadians(-radian)),
+                       0.1f);
+        // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+        SpiralPathCoordinates.push_back(point);
+        FourthInnerCircleCoordinates.push_back(CVector2(point.GetX(), point.GetY()));
     }
 
 	for(UInt32 i = 0; i <= SpiralPathCoordinates.size(); ++i) {
@@ -331,7 +757,37 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
 			CVector2(SpiralPathCoordinates[i].GetX(), SpiralPathCoordinates[i].GetY()));
 	}
 
-	LOG << "SpiralPathCoordinatesForController size: " << SpiralPathCoordinatesForController.size() << std::endl;
+    SetNestsPredefinedEntryPathCoordinates();
+    SetNestsPredefinedExitPathCoordinates();
+
+    // const Real fRedCircleRadius = NestRadius * RedCircleRadiusMultiplier;
+    const UInt32 unNumSegments = 50;
+    const Real arcStart = M_PI / 10.0;      // 30 degrees in radians
+    const Real arcEnd = M_PI / 2.0;        // 90 degrees in radians
+    const Real fDeltaAngle = (arcEnd - arcStart) / unNumSegments;
+
+    for(UInt32 i = 0; i <= unNumSegments; ++i) { // <= to include the last point
+        Real fAngle = arcStart + fDeltaAngle * i;
+        Real x = fRedCircleRadius * cos(fAngle);
+        Real y = fRedCircleRadius * sin(fAngle);
+        forbiddenAreaCoordinates.push_back(CVector2(x, y));
+    }
+
+    LOG << "forbiddenAreaCoordinates size: " << forbiddenAreaCoordinates.size() << std::endl;
+
+    // LOG << "Waiting queue first position: " << waitingQueuePositionsForNest[0].GetX() << ", " << waitingQueuePositionsForNest[0].GetY() << std::endl;
+    // LOG << "SpiralPathCoordinatesForController last position: " << SpiralPathCoordinatesForController[SpiralPathCoordinatesForController.size()-2].GetX() << ", " << SpiralPathCoordinatesForController[SpiralPathCoordinatesForController.size()-2].GetY() << std::endl;
+
+}
+
+bool CPFA_loop_functions::IsNearForbiddenArea(const argos::CVector2& position) {
+    for(const auto& forbiddenPoint : forbiddenAreaCoordinates) {
+        argos::Real distance = (position - forbiddenPoint).Length();
+        if(distance < 0.2) {
+            return true;
+        }
+    }
+    return false;
 }
 
 

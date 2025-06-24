@@ -29,8 +29,16 @@ class CPFA_controller : public BaseController {
 		bool IsUsingSiteFidelity();
 		bool IsInTheNest(CVector2 position);
 
+		void JoinQueue();
+		void LeaveQueue();
+		void UpdateQueuePosition();
+		CVector2 FindQueueEndPosition();
+		void ResetQueueState();
+
 		Real FoodDistanceTolerance;
 		int selectedNestIndex;
+		int selectedWaitingQueueIndex;
+		// argos::CVector2 selectedWaitingQueuePosition;
 
 		void SetLoopFunctions(CPFA_loop_functions* lf);
   
@@ -46,6 +54,9 @@ class CPFA_controller : public BaseController {
 		CPFA_loop_functions* LoopFunctions;
 		argos::CRandom::CRNG* RNG;
 
+		int currentQueuePosition;
+		int nextPosCheckingTried;
+
 		/* pheromone trail variables */
 		std::vector<argos::CVector2> TrailToShare;
 		std::vector<argos::CVector2> TrailToFollow;
@@ -54,9 +65,14 @@ class CPFA_controller : public BaseController {
 		/* robot position variables */
 		argos::CVector2 SiteFidelityPosition;
   bool			 updateFidelity; //qilu 09/07/2016
+
   
 		vector<CRay3> myTrail;
 		CColor        TrailColor;
+
+		bool isInQueue;
+		bool isHitFirstInnerCircle;
+		bool isHitSecondInnerCircle;
 
 		bool isCircumnavigatingRedCircle = false;
 		argos::CVector2 circumnavigationFinalTarget;
@@ -140,6 +156,12 @@ class CPFA_controller : public BaseController {
 		
 		// Optional: Add these member variables for better wall-following control
 		bool isWallFollowing;
+
+		bool isReachedFirstInnerCircle;
+		bool isReachedSecondInnerCircle;
+		bool isReachedThirdInnerCircle;
+		bool isReachedFourthInnerCircle;
+
 		argos::CVector2 lastWallPosition;
 		argos::Real wallFollowingStartTime;
 
@@ -148,9 +170,24 @@ class CPFA_controller : public BaseController {
 			SITE_FIDELITY, PHEROMONE_TRAIL, RANDOM_SEARCH
 		} nextSearchType;
 
+		bool isNearForbiddenArea;
+		bool isEndingForbiddenArea;
+
 		bool isFollowingPredefinedPath;
+		bool isFollowingNestPredefinedEntryPath;
+		bool isFollowingNestPredefinedExitPath;
+		bool isFollowingPredefinedPathOnForbiddenArea;
 		int predefinedPathIndex;
+		int predefinedPathIndexOnForbiddenArea;
+		int predefinedNestEntryPathIndex;
+		int predefinedNestExitPathIndex;
+		int predefinedPathIndexOnFirstInnerCircle;
+		int predefinedPathIndexOnSecondInnerCircle;
+		int predefinedPathIndexOnThirdInnerCircle;
+		int predefinedPathIndexOnFourthInnerCircle;
 		std::vector<argos::CVector2> predefinedPath;
+		std::vector<argos::CVector3> predefinedNestEntryPath;
+		std::vector<argos::CVector3> predefinedNestExitPath;
 };
 
 #endif /* CPFA_CONTROLLER_H */
