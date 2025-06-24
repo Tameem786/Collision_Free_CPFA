@@ -112,11 +112,6 @@ void CPFA_qt_user_functions::DrawNest() {
                        0.1f);
     DrawCylinder(entryPoint, CQuaternion(), 0.05, 0.05, CColor::BLUE);
 
-    CVector3 exitPoint(loopFunctions.RedCirclePosition.GetX() + (loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier), 
-              loopFunctions.RedCirclePosition.GetY() + (loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier) - 0.7, 
-              0.1f);
-
-    DrawCylinder(exitPoint, CQuaternion(), 0.05, 0.05, CColor::RED);
 
     // SOLUTION 1: Only generate coordinates once (recommended)
     if(loopFunctions.CircleCoordinates.empty()) {
@@ -132,9 +127,94 @@ void CPFA_qt_user_functions::DrawNest() {
     } else {
         DrawSpiralPaths();
     }
-    
-    // Draw the spiral path using pre-generated coordinates
-    // DrawSpiralPaths();
+
+    if(!loopFunctions.nest1EntryPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
+
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest1EntryPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest1EntryPoints[i].GetX(), loopFunctions.nest1EntryPoints[i].GetY(), loopFunctions.nest1EntryPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
+
+    if(!loopFunctions.nest2EntryPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
+
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest2EntryPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest2EntryPoints[i].GetX(), loopFunctions.nest2EntryPoints[i].GetY(), loopFunctions.nest2EntryPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
+
+    if(!loopFunctions.nest3EntryPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
+
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest3EntryPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest3EntryPoints[i].GetX(), loopFunctions.nest3EntryPoints[i].GetY(), loopFunctions.nest3EntryPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
+
+    if(!loopFunctions.nest4EntryPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
+
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest4EntryPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest4EntryPoints[i].GetX(), loopFunctions.nest4EntryPoints[i].GetY(), loopFunctions.nest4EntryPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
+
+    // if(!loopFunctions.nest1ExitPoints.empty()) {
+    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+    //     glLineWidth(1.0f);          // Optional: thicker line
+
+    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
+    //     for(size_t i = 0; i < loopFunctions.nest1ExitPoints.size(); ++i) {
+    //         glVertex3f(loopFunctions.nest1ExitPoints[i].GetX(), loopFunctions.nest1ExitPoints[i].GetY(), loopFunctions.nest1ExitPoints[i].GetZ() + 0.01f); // Slight lift
+    //     }
+    //     glEnd();
+    // }
+
+    // if(!loopFunctions.nest2ExitPoints.empty()) {
+    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+    //     glLineWidth(1.0f);          // Optional: thicker line
+
+    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
+    //     for(size_t i = 0; i < loopFunctions.nest2ExitPoints.size(); ++i) {
+    //         glVertex3f(loopFunctions.nest2ExitPoints[i].GetX(), loopFunctions.nest2ExitPoints[i].GetY(), loopFunctions.nest2ExitPoints[i].GetZ() + 0.01f); // Slight lift
+    //     }
+    //     glEnd();
+    // }
+
+    // if(!loopFunctions.nest3ExitPoints.empty()) {
+    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+    //     glLineWidth(1.0f);          // Optional: thicker line
+
+    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
+    //     for(size_t i = 0; i < loopFunctions.nest3ExitPoints.size(); ++i) {
+    //         glVertex3f(loopFunctions.nest3ExitPoints[i].GetX(), loopFunctions.nest3ExitPoints[i].GetY(), loopFunctions.nest3ExitPoints[i].GetZ() + 0.01f); // Slight lift
+    //     }
+    //     glEnd();
+    // }
+
+    // if(!loopFunctions.nest4ExitPoints.empty()) {
+    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+    //     glLineWidth(1.0f);          // Optional: thicker line
+
+    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
+    //     for(size_t i = 0; i < loopFunctions.nest4ExitPoints.size(); ++i) {
+    //         glVertex3f(loopFunctions.nest4ExitPoints[i].GetX(), loopFunctions.nest4ExitPoints[i].GetY(), loopFunctions.nest4ExitPoints[i].GetZ() + 0.01f); // Slight lift
+    //     }
+    //     glEnd();
+    // }
 
 }
 
@@ -198,6 +278,22 @@ void CPFA_qt_user_functions::GenerateSpiralPathCoordinates() {
         Real radian = i * (M_PI / 180.0f);
         CVector3 point((fRedCircleRadius*0.6f) * Sin(CRadians(-radian)),
                        (fRedCircleRadius*0.6f) * Cos(CRadians(-radian)),
+                       0.1f);
+        // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+        loopFunctions.SpiralPathCoordinates.push_back(point);
+    }
+
+    anotherPoint.Set(center.GetX(),
+                          center.GetY() + (fRedCircleRadius * 0.5f),
+                          0.1f);
+    loopFunctions.SpiralPathCoordinates.push_back(anotherPoint);
+
+    LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
+
+    for(UInt32 i = 0; i <= unNumPoints; ++i) {
+        Real radian = i * (M_PI / 180.0f);
+        CVector3 point((fRedCircleRadius*0.5f) * Cos(CRadians(-radian)),
+                       (fRedCircleRadius*0.5f) * Sin(CRadians(-radian)),
                        0.1f);
         // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         loopFunctions.SpiralPathCoordinates.push_back(point);

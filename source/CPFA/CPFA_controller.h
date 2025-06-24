@@ -149,8 +149,14 @@ class CPFA_controller : public BaseController {
 		} nextSearchType;
 
 		bool isFollowingPredefinedPath;
+		bool isFollowingNestPredefinedEntryPath;
+		bool isFollowingNestPredefinedExitPath;
 		int predefinedPathIndex;
+		int predefinedNestEntryPathIndex;
+		int predefinedNestExitPathIndex;
 		std::vector<argos::CVector2> predefinedPath;
+		std::vector<argos::CVector3> predefinedNestEntryPath;
+		std::vector<argos::CVector3> predefinedNestExitPath;
 };
 
 #endif /* CPFA_CONTROLLER_H */

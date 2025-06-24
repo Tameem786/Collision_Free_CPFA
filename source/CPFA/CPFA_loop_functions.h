@@ -52,6 +52,8 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		void UpdatePheromoneList();
 		void SetFoodDistribution();
 		void SetSpiralPathCoordinates();
+		void SetNestsPredefinedEntryPathCoordinates();
+		void SetNestsPredefinedExitPathCoordinates();
 
 		argos::Real getSimTimeInSeconds();
 
@@ -59,6 +61,16 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		std::vector<argos::CVector3> CircleCoordinates;
 		std::vector<argos::CVector3> SpiralPathCoordinates;
 		std::vector<argos::CVector2> SpiralPathCoordinatesForController;
+
+		std::vector<argos::CVector3> nest1EntryPoints;
+		std::vector<argos::CVector3> nest2EntryPoints;
+		std::vector<argos::CVector3> nest3EntryPoints;
+		std::vector<argos::CVector3> nest4EntryPoints;
+
+		std::vector<argos::CVector3> nest1ExitPoints;
+		std::vector<argos::CVector3> nest2ExitPoints;
+		std::vector<argos::CVector3> nest3ExitPoints;
+		std::vector<argos::CVector3> nest4ExitPoints;
 
 		unsigned int getNumberOfRobots();
         void increaseNumDistributedFoodByOne();
