@@ -362,7 +362,10 @@ void BaseController::Stop() {
 
 void BaseController::Move() {
 
-	if(Wait() == true) return;
+	if(Wait() == true) {
+		wheelActuator->SetLinearVelocity(0.0, 0.0);
+		return;
+	}
 
 	collisionFlag = CollisionDetection();
  //double randomNumber = RNG->Uniform(argos::CRange<double>(0.0, 1.0));//qilu 09/24/2016

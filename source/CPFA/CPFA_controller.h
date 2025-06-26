@@ -82,7 +82,8 @@ class CPFA_controller : public BaseController {
 			RETURNING = 2,
 			SURVEYING = 3,
 			EXITING = 4,
-			FOLLOWING_ENTRY_PATH = 5
+			FOLLOWING_ENTRY_PATH = 5,
+			LEAVING_RED_CIRCLE = 6
 		} CPFA_state;
 
 		/* iAnt CPFA state functions */
@@ -93,6 +94,7 @@ class CPFA_controller : public BaseController {
 		void Surveying();
 		void Exiting();
 		void FollowingEntryPath();
+		void LeavingRedCircle();
 		bool CanEnterPredefinedPath();
 		void GeneratePredefinedPath();
 
@@ -131,6 +133,7 @@ class CPFA_controller : public BaseController {
 		bool isHeadingToEntryPoint;
 		bool hasStartedBoundaryFollow;
 		bool isPausingOnBoundary;
+		bool isLeavingForColliding;
 		argos::CVector2 entryPoint;
 		argos::Real redCircleRadius;
 

@@ -172,49 +172,49 @@ void CPFA_qt_user_functions::DrawNest() {
         glEnd();
     }
 
-    // if(!loopFunctions.nest1ExitPoints.empty()) {
-    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
-    //     glLineWidth(1.0f);          // Optional: thicker line
+    if(!loopFunctions.nest1ExitPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
 
-    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
-    //     for(size_t i = 0; i < loopFunctions.nest1ExitPoints.size(); ++i) {
-    //         glVertex3f(loopFunctions.nest1ExitPoints[i].GetX(), loopFunctions.nest1ExitPoints[i].GetY(), loopFunctions.nest1ExitPoints[i].GetZ() + 0.01f); // Slight lift
-    //     }
-    //     glEnd();
-    // }
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest1ExitPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest1ExitPoints[i].GetX(), loopFunctions.nest1ExitPoints[i].GetY(), loopFunctions.nest1ExitPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
 
-    // if(!loopFunctions.nest2ExitPoints.empty()) {
-    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
-    //     glLineWidth(1.0f);          // Optional: thicker line
+    if(!loopFunctions.nest2ExitPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
 
-    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
-    //     for(size_t i = 0; i < loopFunctions.nest2ExitPoints.size(); ++i) {
-    //         glVertex3f(loopFunctions.nest2ExitPoints[i].GetX(), loopFunctions.nest2ExitPoints[i].GetY(), loopFunctions.nest2ExitPoints[i].GetZ() + 0.01f); // Slight lift
-    //     }
-    //     glEnd();
-    // }
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest2ExitPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest2ExitPoints[i].GetX(), loopFunctions.nest2ExitPoints[i].GetY(), loopFunctions.nest2ExitPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
 
-    // if(!loopFunctions.nest3ExitPoints.empty()) {
-    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
-    //     glLineWidth(1.0f);          // Optional: thicker line
+    if(!loopFunctions.nest3ExitPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
 
-    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
-    //     for(size_t i = 0; i < loopFunctions.nest3ExitPoints.size(); ++i) {
-    //         glVertex3f(loopFunctions.nest3ExitPoints[i].GetX(), loopFunctions.nest3ExitPoints[i].GetY(), loopFunctions.nest3ExitPoints[i].GetZ() + 0.01f); // Slight lift
-    //     }
-    //     glEnd();
-    // }
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest3ExitPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest3ExitPoints[i].GetX(), loopFunctions.nest3ExitPoints[i].GetY(), loopFunctions.nest3ExitPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
 
-    // if(!loopFunctions.nest4ExitPoints.empty()) {
-    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
-    //     glLineWidth(1.0f);          // Optional: thicker line
+    if(!loopFunctions.nest4ExitPoints.empty()) {
+        glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+        glLineWidth(1.0f);          // Optional: thicker line
 
-    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
-    //     for(size_t i = 0; i < loopFunctions.nest4ExitPoints.size(); ++i) {
-    //         glVertex3f(loopFunctions.nest4ExitPoints[i].GetX(), loopFunctions.nest4ExitPoints[i].GetY(), loopFunctions.nest4ExitPoints[i].GetZ() + 0.01f); // Slight lift
-    //     }
-    //     glEnd();
-    // }
+        glBegin(GL_LINE_STRIP);     // Connect points in sequence
+        for(size_t i = 0; i < loopFunctions.nest4ExitPoints.size(); ++i) {
+            glVertex3f(loopFunctions.nest4ExitPoints[i].GetX(), loopFunctions.nest4ExitPoints[i].GetY(), loopFunctions.nest4ExitPoints[i].GetZ() + 0.01f); // Slight lift
+        }
+        glEnd();
+    }
 
 }
 

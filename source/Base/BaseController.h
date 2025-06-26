@@ -34,6 +34,7 @@ class BaseController : public argos::CCI_Controller {
 		void Move();
 		bool Wait();
 		void Wait(size_t wait_time_in_seconds);
+		bool CollisionDetection();
 
 		/*  time calculation functions */
 		size_t SimulationTick();
@@ -119,7 +120,7 @@ class BaseController : public argos::CCI_Controller {
 		void PopMovement();
 
 		/* collision detection functions */
-		bool CollisionDetection();
+		// bool CollisionDetection();
 		argos::CVector2 GetCollisionVector();
 
 		bool heading_to_nest;

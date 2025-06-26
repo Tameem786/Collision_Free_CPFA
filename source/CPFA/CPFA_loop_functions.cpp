@@ -276,37 +276,37 @@ void CPFA_loop_functions::SetNestsPredefinedEntryPathCoordinates() {
     nest3EntryPoints.push_back(lastPoint3);
     nest4EntryPoints.push_back(lastPoint4);
 
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 9; i++) {
         lastPoint1.Set(lastPoint1.GetX(), lastPoint1.GetY() + 0.05f, 0.0f);
         nest1EntryPoints.push_back(lastPoint1);
     }
 
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 8; i++) {
         lastPoint1.Set(lastPoint1.GetX()+ 0.05f, lastPoint1.GetY(), 0.0f);
         nest1EntryPoints.push_back(lastPoint1);
     }
 
-    for(int i = 0; i < 7; i++) {
+    for(int i = 0; i < 5; i++) {
         lastPoint2.Set(lastPoint2.GetX() - 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
         nest2EntryPoints.push_back(lastPoint2);
     }
 
-    for(int i = 0; i < 7; i++) {
+    for(int i = 0; i < 9; i++) {
         lastPoint2.Set(lastPoint2.GetX(), lastPoint2.GetY() + 0.05f, 0.0f);
         nest2EntryPoints.push_back(lastPoint2);
     }
 
-    for(int i = 0; i < 8; i++) {
+    for(int i = 0; i < 7; i++) {
         lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY(), 0.0f);
         nest2EntryPoints.push_back(lastPoint2);
     }
 
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 8; i++) {
         lastPoint3.Set(lastPoint3.GetX() - 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
         nest3EntryPoints.push_back(lastPoint3);
     }
 
-    for(int i = 0; i < 12; i++) {
+    for(int i = 0; i < 13; i++) {
         lastPoint3.Set(lastPoint3.GetX(), lastPoint3.GetY() + 0.05f, 0.0f);
         nest3EntryPoints.push_back(lastPoint3);
     }
@@ -316,27 +316,17 @@ void CPFA_loop_functions::SetNestsPredefinedEntryPathCoordinates() {
         nest3EntryPoints.push_back(lastPoint3);
     }
 
-    for(int i = 0; i < 5; i++) {
-        lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
-        nest4EntryPoints.push_back(lastPoint4);
-    }
-
-    for(int i = 0; i < 12; i++) {
-        lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
-        nest4EntryPoints.push_back(lastPoint4);
-    }
-
     for(int i = 0; i < 4; i++) {
         lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
         nest4EntryPoints.push_back(lastPoint4);
     }
 
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < 16; i++) {
         lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
         nest4EntryPoints.push_back(lastPoint4);
     }
 
-    for(int i = 0; i < 5; i++) {
+    for(int i = 0; i < 8; i++) {
         lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
         nest4EntryPoints.push_back(lastPoint4);
     }
@@ -358,71 +348,47 @@ void CPFA_loop_functions::SetNestsPredefinedExitPathCoordinates() {
     nest3ExitPoints.push_back(lastPoint3);
     nest4ExitPoints.push_back(lastPoint4);
 
+    // Nest 1 EXIT PATH
     for(int i = 0; i < 6; i++) {
         lastPoint1.Set(lastPoint1.GetX()+ 0.05f, lastPoint1.GetY(), 0.0f);
         nest1ExitPoints.push_back(lastPoint1);
     }
-
-    for(int i = 0; i < 35; i++) {
-        lastPoint1.Set(lastPoint1.GetX() + 0.045f, lastPoint1.GetY() + 0.05f, 0.0f);
+    for(int i = 0; i < 30; i++) {
+        lastPoint1.Set(lastPoint1.GetX() + 0.05f, lastPoint1.GetY() + 0.05f, 0.0f);
         nest1ExitPoints.push_back(lastPoint1);
     }
 
+    // Nest 2 EXIT PATH
     for(int i = 0; i < 6; i++) {
         lastPoint2.Set(lastPoint2.GetX(), lastPoint2.GetY() + 0.05f, 0.0f);
         nest2ExitPoints.push_back(lastPoint2);
     }
-
-    for(int i = 0; i < 35; i++) {
-        lastPoint2.Set(lastPoint2.GetX() + 0.045f, lastPoint2.GetY() + 0.05f, 0.0f);
+    for(int i = 0; i < 30; i++) {
+        lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
         nest2ExitPoints.push_back(lastPoint2);
     }
 
     
-
-    for(int i = 0; i < 8; i++) {
-        lastPoint3.Set(lastPoint3.GetX()+ 0.05f, lastPoint3.GetY(), 0.0f);
-        nest3ExitPoints.push_back(lastPoint3);
-    }
-
-    for(int i = 0; i < 10; i++) {
+    // Nest 3 EXIT PATH
+    for(int i = 0; i < 6; i++) {
         lastPoint3.Set(lastPoint3.GetX(), lastPoint3.GetY() + 0.05f, 0.0f);
         nest3ExitPoints.push_back(lastPoint3);
     }
-
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 25; i++) {
         lastPoint3.Set(lastPoint3.GetX() + 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
         nest3ExitPoints.push_back(lastPoint3);
     }
 
-    // Move Left
-    for(int i = 0; i < 10; i++) {
-        lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
+    // Nest 4 EXIT PATH
+    for(int i = 0; i < 6; i++) {
+        lastPoint4.Set(lastPoint4.GetX() + 0.05f, lastPoint4.GetY(), 0.0f);
         nest4ExitPoints.push_back(lastPoint4);
     }
-    // Move Up
-    for(int i = 0; i < 10; i++) {
-        lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
-        nest4ExitPoints.push_back(lastPoint4);
-    }
-     // Move Left
-    for(int i = 0; i < 20; i++) {
-        lastPoint4.Set(lastPoint4.GetX() + 0.04f, lastPoint4.GetY() + 0.05f, 0.0f);
+    for(int i = 0; i < 25; i++) {
+        lastPoint4.Set(lastPoint4.GetX() + 0.05f, lastPoint4.GetY() + 0.05f, 0.0f);
         nest4ExitPoints.push_back(lastPoint4);
     }
    
-
-
-
-    // for(int i = 0; i < 10; i++) {
-    //     lastPoint1.Set(lastPoint1.GetX(), lastPoint1.GetY() + 0.05f, 0.0f);
-    //     nest1ExitPoints.push_back(lastPoint1);
-    // }
-
-    // for(int i = 0; i < 6; i++) {
-    //     lastPoint1.Set(lastPoint1.GetX()+ 0.05f, lastPoint1.GetY(), 0.0f);
-    //     nest1ExitPoints.push_back(lastPoint1);
-    // }
 }
 
 void CPFA_loop_functions::SetSpiralPathCoordinates() {
@@ -451,9 +417,11 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
     SpiralPathCoordinates.push_back(startPoint);
     
     const UInt32 unNumPoints = 270;
+    Real arc_degree = 302.0f;
    
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
-        Real radian = i * (300.0f * M_PI / (180.0f * unNumPoints));
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
         CVector3 point((fRedCircleRadius*0.9f) * Sin(CRadians(-radian)),
                        (fRedCircleRadius*0.9f) * Cos(CRadians(-radian)),
                        0.1f);
@@ -461,15 +429,21 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
         SpiralPathCoordinates.push_back(point);
     }
 
-    CVector3 anotherPoint(center.GetX() + (fRedCircleRadius * 0.75f),
-                          center.GetY(),
-                          0.1f);
+    float t = 0.15f; // 20% of the distance to the center
+    CVector3 lastPoint = SpiralPathCoordinates.back();
+    CVector3 anotherPoint(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
+
     SpiralPathCoordinates.push_back(anotherPoint);
 
-    // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
+    // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
 
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
-        Real radian = i * (300.0f * M_PI / (180.0f * unNumPoints));
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
         CVector3 point((fRedCircleRadius*0.75f) * Cos(CRadians(-radian)),
                        (fRedCircleRadius*0.75f) * Sin(CRadians(-radian)),
                        0.1f);
@@ -477,15 +451,21 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
         SpiralPathCoordinates.push_back(point);
     }
 
-    anotherPoint.Set(center.GetX(),
-                          center.GetY() + (fRedCircleRadius * 0.6f),
-                          0.1f);
+    lastPoint = SpiralPathCoordinates.back();
+    anotherPoint.Set(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
     SpiralPathCoordinates.push_back(anotherPoint);
 
     // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
 
+    arc_degree -= 3;
+
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
-        Real radian = i * (300.0f * M_PI / (180.0f * unNumPoints));
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
         CVector3 point((fRedCircleRadius*0.6f) * Sin(CRadians(-radian)),
                        (fRedCircleRadius*0.6f) * Cos(CRadians(-radian)),
                        0.1f);
@@ -493,20 +473,22 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
         SpiralPathCoordinates.push_back(point);
     }
 
-    // NEW: Transition to fourth circle
-    anotherPoint.Set(center.GetX() + (fRedCircleRadius * 0.45f),
-                     center.GetY(),
-                     0.1f);
+    lastPoint = SpiralPathCoordinates.back();
+    anotherPoint.Set(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
     SpiralPathCoordinates.push_back(anotherPoint);
 
-    LOG << "Fourth circle transition point: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
-
-    // NEW: Fourth circle at 0.45f radius
-    for(UInt32 i = 0; i <= unNumPoints-135; ++i) {
-        Real radian = i * (235.0f * M_PI / (180.0f * unNumPoints));
-        CVector3 point(center.GetX() + (fRedCircleRadius*0.45f) * Cos(CRadians(-radian)),
-                       center.GetY() + (fRedCircleRadius*0.45f) * Sin(CRadians(-radian)),
+    arc_degree = 125.0f;
+    for(UInt32 i = 0; i <= unNumPoints; ++i) {
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+        CVector3 point((fRedCircleRadius*0.45f) * Cos(CRadians(-radian)),
+                       (fRedCircleRadius*0.45f) * Sin(CRadians(-radian)),
                        0.1f);
+        // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         SpiralPathCoordinates.push_back(point);
     }
 
@@ -519,6 +501,61 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
 	}
 
 	LOG << "SpiralPathCoordinatesForController size: " << SpiralPathCoordinatesForController.size() << std::endl;
+}
+
+bool CPFA_loop_functions::IsNearExitPoint(const argos::CVector2 &position) {
+    
+    CVector2 exitpoint(nest1ExitPoints.back().GetX(), nest1ExitPoints.back().GetY());
+    Real distance = (position - exitpoint).Length();
+
+    if(distance < 0.2f) return true;
+
+    return false;
+}
+
+// Method to get a safe target that avoids exit point during boundary following
+argos::CVector2 CPFA_loop_functions::GetExitPointAvoidanceTarget(const argos::CVector2& currentPos, argos::Real currentAngle, argos::Real targetAngle) {
+    argos::Real safeDistance = (NestRadius * RedCircleRadiusMultiplier) + 0.05;
+    argos::Real angularStep = 0.1;
+    
+    // Calculate next position normally
+    argos::Real nextAngle;
+    argos::Real angleDiff = targetAngle - currentAngle;
+    while(angleDiff > M_PI) angleDiff -= 2.0 * M_PI;
+    while(angleDiff < -M_PI) angleDiff += 2.0 * M_PI;
+    
+    if(angleDiff > 0) {
+        nextAngle = currentAngle + angularStep;
+    } else {
+        nextAngle = currentAngle - angularStep;
+    }
+    
+    // Calculate the normal next position
+    argos::CVector2 nextExternalPos(
+        RedCirclePosition.GetX() + safeDistance * cos(nextAngle),
+        RedCirclePosition.GetY() + safeDistance * sin(nextAngle)
+    );
+    
+    // Check if this position is near exit point
+    if(IsNearExitPoint(nextExternalPos)) {
+        // If near exit point, take a detour by moving further out from the circle
+        argos::Real detourDistance = safeDistance + 0.5; // Move further out to avoid exit point
+        nextExternalPos.Set(
+            RedCirclePosition.GetX() + detourDistance * cos(nextAngle),
+            RedCirclePosition.GetY() + detourDistance * sin(nextAngle)
+        );
+        
+        // If still near exit point, try a different angle (skip ahead)
+        if(IsNearExitPoint(nextExternalPos)) {
+            argos::Real skipAngle = nextAngle + (angleDiff > 0 ? angularStep * 2 : -angularStep * 2);
+            nextExternalPos.Set(
+                RedCirclePosition.GetX() + safeDistance * cos(skipAngle),
+                RedCirclePosition.GetY() + safeDistance * sin(skipAngle)
+            );
+        }
+    }
+    
+    return nextExternalPos;
 }
 
 
