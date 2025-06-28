@@ -51,39 +51,13 @@ CPFA_loop_functions::CPFA_loop_functions() :
 
 void CPFA_loop_functions::AddRobotToPathQueueToNest(int nestIndex, const std::string& robotId) {
     if (nestIndex >= 0 && nestIndex < 4) {
-        
         pathAvailableToNest[nestIndex] = false;
-
-        // auto& queue = (nestIndex == 0) ? pathQueueToNest1 : 
-        //              (nestIndex == 1) ? pathQueueToNest2 :
-        //              (nestIndex == 2) ? pathQueueToNest3 : pathQueueToNest4;
-        
-        // auto it = std::find(queue.begin(), queue.end(), robotId);
-        // if (it == queue.end()) {
-        //     queue.push_back(robotId);
-        //     pathAvailableToNest[nestIndex] = false;  // Path is now occupied
-        //     // LOG << "Robot " << robotId << " added to path queue " << nestIndex << std::endl;
-        // }
     }
 }
 
 void CPFA_loop_functions::RemoveRobotFromPathQueueToNest(int nestIndex, const std::string& robotId) {
-    if (nestIndex >= 0 && nestIndex < 4) {
-        
+    if (nestIndex >= 0 && nestIndex < 4) {        
         pathAvailableToNest[nestIndex] = true;
-        
-        // auto& queue = (nestIndex == 0) ? pathQueueToNest1 : 
-        //              (nestIndex == 1) ? pathQueueToNest2 :
-        //              (nestIndex == 2) ? pathQueueToNest3 : pathQueueToNest4;
-        
-        // auto it = std::find(queue.begin(), queue.end(), robotId);
-        // if (it != queue.end()) {
-        //     queue.erase(it);
-        //     if (queue.empty()) {
-        //         pathAvailableToNest[nestIndex] = true;  // Path is now free
-        //     }
-        //     LOG << "Robot " << robotId << " removed from path queue " << nestIndex << std::endl;
-        // }
     }
 }
 
@@ -92,6 +66,7 @@ bool CPFA_loop_functions::IsPathAvailableToNest(int nestIndex) {
 }
 
 int CPFA_loop_functions::GetAvailablePathToNest() {
+    
     for (int i = 0; i < 4; i++) {
         if (pathAvailableToNest[i]) {
             return i;
@@ -105,8 +80,8 @@ void CPFA_loop_functions::AddRobotToPathQueue(const std::string& robotId) {
     auto it = std::find(pathQueue.begin(), pathQueue.end(), robotId);
     if (it == pathQueue.end()) {
         pathQueue.push_back(robotId);
-        argos::LOG << "Robot " << robotId << " added to path queue. Queue size: " 
-                   << pathQueue.size() << std::endl;
+        // argos::LOG << "Robot " << robotId << " added to path queue. Queue size: " 
+        //            << pathQueue.size() << std::endl;
     } else {
         argos::LOG << "Robot " << robotId << " already in path queue." << std::endl;
     }
@@ -116,8 +91,8 @@ void CPFA_loop_functions::RemoveRobotFromPathQueue(const std::string& robotId) {
     auto it = std::find(pathQueue.begin(), pathQueue.end(), robotId);
     if (it != pathQueue.end()) {
         pathQueue.erase(it);
-        argos::LOG << "Robot " << robotId << " removed from path queue. Queue size: " 
-                   << pathQueue.size() << std::endl;
+        // argos::LOG << "Robot " << robotId << " removed from path queue. Queue size: " 
+        //            << pathQueue.size() << std::endl;
     } else {
         argos::LOG << "Warning: Tried to remove robot " << robotId 
                    << " from path queue, but it wasn't found." << std::endl;
@@ -204,9 +179,9 @@ void CPFA_loop_functions::Init(argos::TConfigurationNode &node) {
 		// argos::LOG << "Nest Position: " << x << ", " << y << std::endl;
 	}
 	//print content of nest_positions
-	// for (const auto& pos : NestPositions) {
-	// 	argos::LOG << "Nest Position: " << pos.GetX() << ", " << pos.GetY() << std::endl;
-	// }
+	for (int i=0; i<NestPositions.size(); i++) {
+		argos::LOG << "Nest Position[" << i << "]: " << NestPositions[i].GetX() << ", " << NestPositions[i].GetY() << std::endl;
+	}
     FoodRadiusSquared = FoodRadius*FoodRadius;
 
     //Number of distributed foods
@@ -491,7 +466,9 @@ CircleEntry CPFA_loop_functions::IsNearSecondInnerCircle(const argos::CVector2& 
 }
 
 CircleEntry CPFA_loop_functions::IsNearThirdInnerCircle(const argos::CVector2& position) {
+    
     for(int i = 0; i < ThirdInnerCircleCoordinates.size(); i++) {
+        
         if((ThirdInnerCircleCoordinates[i] - position).Length() < 0.15) {
             for(int j = 0; j < SpiralPathCoordinatesForController.size(); j++) {
                 if(SpiralPathCoordinatesForController[j] == ThirdInnerCircleCoordinates[i]) {
@@ -597,8 +574,8 @@ void CPFA_loop_functions::SetNestsPredefinedExitPathCoordinates() {
         nest1ExitPoints.push_back(lastPoint1);
     }
 
-    for(int i = 0; i < 35; i++) {
-        lastPoint1.Set(lastPoint1.GetX() + 0.045f, lastPoint1.GetY() + 0.05f, 0.0f);
+    for(int i = 0; i < 30; i++) {
+        lastPoint1.Set(lastPoint1.GetX() + 0.05f, lastPoint1.GetY() + 0.05f, 0.0f);
         nest1ExitPoints.push_back(lastPoint1);
     }
 
@@ -607,41 +584,30 @@ void CPFA_loop_functions::SetNestsPredefinedExitPathCoordinates() {
         nest2ExitPoints.push_back(lastPoint2);
     }
 
-    for(int i = 0; i < 35; i++) {
-        lastPoint2.Set(lastPoint2.GetX() + 0.045f, lastPoint2.GetY() + 0.05f, 0.0f);
+    for(int i = 0; i < 30; i++) {
+        lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
         nest2ExitPoints.push_back(lastPoint2);
     }
 
     
 
     for(int i = 0; i < 6; i++) {
-        lastPoint3.Set(lastPoint3.GetX()+ 0.05f, lastPoint3.GetY(), 0.0f);
-        nest3ExitPoints.push_back(lastPoint3);
-    }
-
-    for(int i = 0; i < 8; i++) {
         lastPoint3.Set(lastPoint3.GetX(), lastPoint3.GetY() + 0.05f, 0.0f);
         nest3ExitPoints.push_back(lastPoint3);
     }
 
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 25; i++) {
         lastPoint3.Set(lastPoint3.GetX() + 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
         nest3ExitPoints.push_back(lastPoint3);
     }
 
-    // Move Left
-    for(int i = 0; i < 10; i++) {
-        lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
-        nest4ExitPoints.push_back(lastPoint4);
-    }
-    // Move Up
-    for(int i = 0; i < 10; i++) {
-        lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
+    for(int i = 0; i < 6; i++) {
+        lastPoint4.Set(lastPoint4.GetX() + 0.05f, lastPoint4.GetY(), 0.0f);
         nest4ExitPoints.push_back(lastPoint4);
     }
      // Move Left
     for(int i = 0; i < 20; i++) {
-        lastPoint4.Set(lastPoint4.GetX() + 0.04f, lastPoint4.GetY() + 0.05f, 0.0f);
+        lastPoint4.Set(lastPoint4.GetX() + 0.05f, lastPoint4.GetY() + 0.05f, 0.0f);
         nest4ExitPoints.push_back(lastPoint4);
     }
 }
@@ -657,25 +623,16 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
     
     const Real fRedCircleRadius = NestRadius * RedCircleRadiusMultiplier;
     const CVector2 center = RedCirclePosition;
-
-    // Entry point (bottom of the outer circle)
-    entryPoint.Set(center.GetX(), 
-                       center.GetY() + fRedCircleRadius,
-                       0.1f);
-    // LOG << "entryPoint: " << entryPoint.GetX() << ", " << entryPoint.GetY() << std::endl;
-    SpiralPathCoordinates.push_back(entryPoint);
     
     // Specific point inside the red circle (you can adjust this)
     CVector3 startPoint(center.GetX(),  // 30% radius to the right
                        center.GetY() + (fRedCircleRadius * 0.9f),   // 40% radius down
                        0.1f);
-
-    // LOG << "startPoint: " << startPoint.GetX() << ", " << startPoint.GetY() << std::endl;
     
     SpiralPathCoordinates.push_back(startPoint);
     
     const UInt32 unNumPoints = 270;
-    Real arc_degree = 290.0f;
+    Real arc_degree = 302.0f;
    
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
         // Real radian = i * (M_PI / 180.0f);
@@ -721,6 +678,7 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
 
     // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
 
+    arc_degree -= 3;
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
         // Real radian = i * (M_PI / 180.0f);
         Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
@@ -761,33 +719,42 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
     SetNestsPredefinedExitPathCoordinates();
 
     // const Real fRedCircleRadius = NestRadius * RedCircleRadiusMultiplier;
-    const UInt32 unNumSegments = 50;
-    const Real arcStart = M_PI / 10.0;      // 30 degrees in radians
-    const Real arcEnd = M_PI / 2.0;        // 90 degrees in radians
+    const UInt32 unNumSegments = 30;
+    const Real arcStart = M_PI / 6.0;      // 30 degrees in radians
+    const Real arcEnd = M_PI / 3.0;        // 90 degrees in radians
     const Real fDeltaAngle = (arcEnd - arcStart) / unNumSegments;
 
     for(UInt32 i = 0; i <= unNumSegments; ++i) { // <= to include the last point
         Real fAngle = arcStart + fDeltaAngle * i;
-        Real x = fRedCircleRadius * cos(fAngle);
-        Real y = fRedCircleRadius * sin(fAngle);
+        Real x = (fRedCircleRadius + 0.3) * cos(fAngle);
+        Real y = (fRedCircleRadius + 0.3)* sin(fAngle);
         forbiddenAreaCoordinates.push_back(CVector2(x, y));
     }
 
-    LOG << "forbiddenAreaCoordinates size: " << forbiddenAreaCoordinates.size() << std::endl;
+    // LOG << "forbiddenAreaCoordinates size: " << forbiddenAreaCoordinates.size() << std::endl;
 
     // LOG << "Waiting queue first position: " << waitingQueuePositionsForNest[0].GetX() << ", " << waitingQueuePositionsForNest[0].GetY() << std::endl;
     // LOG << "SpiralPathCoordinatesForController last position: " << SpiralPathCoordinatesForController[SpiralPathCoordinatesForController.size()-2].GetX() << ", " << SpiralPathCoordinatesForController[SpiralPathCoordinatesForController.size()-2].GetY() << std::endl;
 
 }
 
-bool CPFA_loop_functions::IsNearForbiddenArea(const argos::CVector2& position) {
-    for(const auto& forbiddenPoint : forbiddenAreaCoordinates) {
-        argos::Real distance = (position - forbiddenPoint).Length();
+bool CPFA_loop_functions::IsNearExitPoint(const argos::CVector2& position) {
+    CVector2 exitpoint(nest1ExitPoints.back().GetX(), nest1ExitPoints.back().GetY());
+    Real distance = (position - exitpoint).Length();
+
+    if(distance < 0.2f) return true;
+
+    return false;
+}
+
+CircleEntry CPFA_loop_functions::IsNearForbiddenArea(const argos::CVector2& position) {
+    for(int i; i < forbiddenAreaCoordinates.size(); i++) {
+        argos::Real distance = (position - forbiddenAreaCoordinates[i]).Length();
         if(distance < 0.2) {
-            return true;
+            return CircleEntry(true, i);
         }
     }
-    return false;
+    return CircleEntry(false, -1);
 }
 
 

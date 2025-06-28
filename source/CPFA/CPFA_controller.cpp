@@ -43,8 +43,13 @@ CPFA_controller::CPFA_controller() :
 		isFollowingNestPredefinedExitPath(false),
 		isNearForbiddenArea(false),
 		isEndingForbiddenArea(false),
-		isFollowingPredefinedPathOnForbiddenArea(false)
+		isFollowingPredefinedPathOnForbiddenArea(false),
+		isFollowingAvoidance(false),
+		isFollowingOuterCircle(false),
+		isWaitingForNest(false)
 {
+	GoStraightAngleRangeInDegreesInRegion.Set(-30.0, 30.0);
+	GoStraightAngleRangeInDegreesGoingToRegion.Set(-55.0, 55.0);
 	// redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
 }
 
@@ -234,6 +239,9 @@ void CPFA_controller::CPFA() {
 			break;
 		case FOLLOWING_ENTRY_PATH:
 			FollowingEntryPath();
+			break;
+		case FOLLOWING_OUTER_CIRCLE:
+			FollowingOuterCircle();
 			break;
 	}
 }
@@ -711,30 +719,75 @@ void CPFA_controller::Returning() {
 	} else {
 
 
-		//Version 2.0: Tameem - Claude Work Here
+		//Version 2.0: Tameem
 		if(isHoldingFood && !isReachedThirdInnerCircle && !isNearForbiddenArea) {
 
-			if(LoopFunctions->IsNearFirstInnerCircle(GetPosition()).isHit) {
-				predefinedPathIndexOnFirstInnerCircle = LoopFunctions->IsNearFirstInnerCircle(GetPosition()).positionIndex;
-				isHitFirstInnerCircle = true;
-			}
-			if(LoopFunctions->IsNearSecondInnerCircle(GetPosition()).isHit) {
-				predefinedPathIndexOnSecondInnerCircle = LoopFunctions->IsNearSecondInnerCircle(GetPosition()).positionIndex;
-				isHitSecondInnerCircle = true;
-			}
-			if(LoopFunctions->IsNearThirdInnerCircle(GetPosition()).isHit) {
-				isReachedThirdInnerCircle = true;
-				isFollowingPredefinedPath = true;
-				predefinedPathIndex = LoopFunctions->IsNearThirdInnerCircle(GetPosition()).positionIndex;
-				// LOG << GetId() << " heading to: " << LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex].GetX() << ", " << LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex].GetY() << std::endl;
-				LoopFunctions->AddRobotToPathQueue(GetId());
-				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
-				SetIsHeadingToNest(false);
-				CPFA_state = FOLLOWING_ENTRY_PATH;
-				return;
+			if(LoopFunctions->IsNearRedCircle(GetPosition()) || LoopFunctions->IsInsideRedCircle(GetPosition())) {
+
+				if(LoopFunctions->IsNearForbiddenArea(GetPosition()).isHit && !isFollowingAvoidance) {
+					// LOG << GetId() << " is near forbidden area, start following" << std::endl;
+					isNearForbiddenArea = true;
+					isFollowingAvoidance = true;
+					CVector2 entryPoint(LoopFunctions->RedCirclePosition.GetX(), 
+						LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier
+						);
+					SetTarget(entryPoint);
+					SetIsHeadingToNest(false);
+				}
 				
+				if(LoopFunctions->IsNearThirdInnerCircle(GetPosition()).isHit) {
+					isReachedThirdInnerCircle = true;
+					isFollowingPredefinedPath = true;
+					predefinedPathIndex = LoopFunctions->IsNearThirdInnerCircle(GetPosition()).positionIndex;
+					// LoopFunctions->AddRobotToPathQueue(GetId());
+					SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+					SetIsHeadingToNest(false);
+					CPFA_state = FOLLOWING_ENTRY_PATH;
+					return;
+					
+				} else {
+
+					if(LoopFunctions->IsNearFirstInnerCircle(GetPosition()).isHit) {
+						predefinedPathIndexOnFirstInnerCircle = LoopFunctions->IsNearFirstInnerCircle(GetPosition()).positionIndex;
+						isHitFirstInnerCircle = true;
+					}
+					if(LoopFunctions->IsNearSecondInnerCircle(GetPosition()).isHit) {
+						predefinedPathIndexOnSecondInnerCircle = LoopFunctions->IsNearSecondInnerCircle(GetPosition()).positionIndex;
+						isHitSecondInnerCircle = true;
+					}
+
+					if(CollisionDetection()) {
+						if(isReachedThirdInnerCircle) {
+							predefinedPathIndex = predefinedPathIndexOnSecondInnerCircle;
+						} else if(isHitSecondInnerCircle || isHitFirstInnerCircle) {
+							predefinedPathIndex = predefinedPathIndexOnFirstInnerCircle;
+						}
+					
+						SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+						SetIsHeadingToNest(false);
+						isFollowingOuterCircle = true;
+						CPFA_state = FOLLOWING_OUTER_CIRCLE;
+						return;
+					}
+
+					// Robot is not at last inner circle yet, head towards it
+					argos::CVector2 currentPos = GetPosition();
+					argos::CVector2 directionToCenter = (LoopFunctions->RedCirclePosition - currentPos).Normalize();
+					
+					//fRedCircleRadius * 0.9f - First Inner Circle
+					//fRedCircleRadius * 0.75f - Second Inner Circle
+					//fRedCircleRadius * 0.6f - Third Inner Circle
+					//fRedCircleRadius * 0.45f - Fourth Inner Circle
+
+					// Set target to a point slightly outside the red circle (safe distance)
+					argos::Real safeDistance = (redCircleRadius * 0.6f) + 0.1;
+					argos::CVector2 targetOnCircle = LoopFunctions->RedCirclePosition - directionToCenter * safeDistance;
+					
+					SetTarget(targetOnCircle);
+					SetIsHeadingToNest(false);
+				}
 			} else {
-				// Robot is not at red circle yet, head towards it
+				// Robot is not at last inner circle yet, head towards it
 				argos::CVector2 currentPos = GetPosition();
 				argos::CVector2 directionToCenter = (LoopFunctions->RedCirclePosition - currentPos).Normalize();
 				
@@ -744,16 +797,115 @@ void CPFA_controller::Returning() {
 				//fRedCircleRadius * 0.45f - Fourth Inner Circle
 
 				// Set target to a point slightly outside the red circle (safe distance)
-				argos::Real safeDistance = (redCircleRadius * 0.6f) + 0.1;
+				argos::Real safeDistance = redCircleRadius + 0.1;
 				argos::CVector2 targetOnCircle = LoopFunctions->RedCirclePosition - directionToCenter * safeDistance;
 				
 				SetTarget(targetOnCircle);
 				SetIsHeadingToNest(false);
 			}
 
+
+		}
+
+		if(isHoldingFood && isNearForbiddenArea) {
+				
+			if(IsAtTarget()) {
+				isNearForbiddenArea = false;
+				isFollowingAvoidance = false;
+				isReachedThirdInnerCircle = true;
+				isFollowingPredefinedPath = true;
+				// LoopFunctions->AddRobotToPathQueue(GetId());
+				predefinedPathIndex = 0;
+				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+				SetIsHeadingToNest(false);
+				CPFA_state = FOLLOWING_ENTRY_PATH;
+				return;
+			} else {
+				CVector2 entryPoint(LoopFunctions->RedCirclePosition.GetX(), 
+                       LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier
+                    );
+				SetTarget(entryPoint);
+				SetIsHeadingToNest(false);
+			}
 		}
 		
 	}
+}
+
+void CPFA_controller::FollowingOuterCircle() {
+	if(isFollowingOuterCircle && isHoldingFood) {
+		if(IsAtTarget()) {
+			isReachedThirdInnerCircle = true;
+			isFollowingPredefinedPath = true;
+			isFollowingOuterCircle = false;
+			// LoopFunctions->AddRobotToPathQueue(GetId());
+			CPFA_state = FOLLOWING_ENTRY_PATH;
+			return;
+		} else {
+			SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+			SetIsHeadingToNest(false);
+		}
+	}
+}
+
+bool CPFA_controller::CollisionDetection() {
+	//log current CPFA State
+	argos::CVector2 collisionVector = GetCollisionVector();
+	argos::Real collisionAngle = ToDegrees(collisionVector.Angle()).GetValue();
+	bool isCollisionDetected = false;
+	
+	// this is the normal collision logic where a robot determines a where it is colliding with another robot and the turn it must take.
+    if (GetStatus() == "FOLLOWING_ENTRY_PATH") {
+        if (GoStraightAngleRangeInDegreesInRegion.WithinMinBoundIncludedMaxBoundIncluded(collisionAngle)
+            && collisionVector.Length() > 0.0) {
+			Stop();
+            stopCounter++; // Increment the stop counter
+            if (stopCounter > 75) {
+                // Resume movement after 200 timesteps
+                stopCounter = 0; // Reset the counter
+            }
+			Stop();
+            return true; // Keep the robot stopped
+        } else{
+			// Reset the stop counter if no collision is detected
+			stopCounter = 0;
+		}
+    }
+
+	else{
+	
+		if(GoStraightAngleRangeInDegrees.WithinMinBoundIncludedMaxBoundIncluded(collisionAngle)
+			&& collisionVector.Length() > 0.0) {
+
+			// if a robot is following a path, we dont want to avoid collisions since paths dont overlap. So there will be no
+			// collisions as longs other robots don't interfere.
+			isCollisionDetected = true;
+			collision_counter++;
+			// if(goingtoentry) {
+			// 	return isCollisionDetected;
+			// }	 
+			Stop();
+
+
+			while(MovementStack.size() > 0) MovementStack.pop();
+
+			PushMovement(FORWARD, SearchStepSize);
+
+			Real randomNumber = RNG->Uniform(CRange<Real>(0.5, 1.0));
+			collisionDelay = SimulationTick() + (size_t)(randomNumber*SimulationTicksPerSecond());//qilu 10/26/2016	
+
+			if(collisionAngle <= 0.0)  {
+				//argos::LOG << collisionAngle << std::endl << collisionVector << std::endl << std::endl;
+				SetLeftTurn(collisionAngle); //qilu 09/24/2016
+			} else {
+				//argos::LOG << collisionAngle << std::endl << collisionVector << std::endl << std::endl;
+				SetRightTurn(collisionAngle); //qilu 09/24/2016
+			}
+
+		}
+	}
+
+	return isCollisionDetected;
 }
 
 void CPFA_controller::FollowingEntryPath() {
@@ -763,19 +915,18 @@ void CPFA_controller::FollowingEntryPath() {
 	argos::Real distanceToCurrentWaypoint = (currentPos - currentTarget).Length();
 	
 	// Check if we've reached the current waypoint
-	if(distanceToCurrentWaypoint < 0.15 && isFollowingPredefinedPath) { // Waypoint reached threshold
+	if(distanceToCurrentWaypoint < 0.15 && isFollowingPredefinedPath && !isWaitingForNest) { // Waypoint reached threshold
 		predefinedPathIndex++;
 
 		// Check if we've completed the path (reached nest) - Works Fine Up to Here
 		if(predefinedPathIndex >= LoopFunctions->SpiralPathCoordinatesForController.size()-1) {
-			// argos::LOG << GetId() << " Completed predefined path. Heading to nest." << std::endl;
-			
 			
 			int availablePathToNest = LoopFunctions->GetAvailablePathToNest();
-
+			
 			if(availablePathToNest != -1) {
+			
 				selectedNestIndex = availablePathToNest;
-				LoopFunctions->RemoveRobotFromPathQueue(GetId());
+				// LoopFunctions->RemoveRobotFromPathQueue(GetId());
 				LoopFunctions->AddRobotToPathQueueToNest(selectedNestIndex, GetId());
 
 				isFollowingPredefinedPath = false;
@@ -784,31 +935,70 @@ void CPFA_controller::FollowingEntryPath() {
 
 				Real nestX = LoopFunctions->NestPositions[selectedNestIndex].GetX();
 				Real nestY = LoopFunctions->NestPositions[selectedNestIndex].GetY();
-				if(nestX == 0.0 && nestY == -0.3) {
+
+				if(nestX == 0.0 && nestY == -0.3) { // index 2
 					predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest2ExitPoints;
-				} else if(nestX == -3.0 && nestY == 0.0) {
+				} else if(nestX == -0.3 && nestY == 0) { // index 3
 					predefinedNestEntryPath = LoopFunctions->nest2EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest1ExitPoints;
-				} else if(nestX == 0.0 && nestY == 0.3) {
+				} else if(nestX == 0.0 && nestY == 0.3) { // index 0
 					predefinedNestEntryPath = LoopFunctions->nest3EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest4ExitPoints;
-				} else if(nestX == 0.3 && nestY == 0.0) {
+				} else if(nestX == 0.3 && nestY == 0.0) { // index 1
 					predefinedNestEntryPath = LoopFunctions->nest4EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest3ExitPoints;
+				} else {
+					LOG << "NO nest position found!" << std::endl;
 				}
 
-				// SetTarget(LoopFunctions->NestPositions[selectedNestIndex]); // temporary value, need to fix later.
-				// SetIsHeadingToNest(false);
-
-			} else {
+			} 
+			else {
+				isWaitingForNest = true;
+				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex-1]);
+				SetIsHeadingToNest(false);
 				argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
 			}
 			
 		} else {
+			// LOG << LoopFunctions->NestPositions[3].GetX() << ", " << LoopFunctions->NestPositions[3].GetY() << std::endl;
 			// Move to next waypoint
 			SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
 		}
+	}
+
+	if(isWaitingForNest && isHoldingFood) {
+		int availablePathToNest = LoopFunctions->GetAvailablePathToNest();
+		if(availablePathToNest != -1) {
+			selectedNestIndex = availablePathToNest;
+			// LoopFunctions->RemoveRobotFromPathQueue(GetId());
+			LoopFunctions->AddRobotToPathQueueToNest(selectedNestIndex, GetId());
+
+			isFollowingPredefinedPath = false;
+			isFollowingNestPredefinedEntryPath = true;
+			isWaitingForNest = false;
+			predefinedNestEntryPathIndex = 0;
+
+			Real nestX = LoopFunctions->NestPositions[selectedNestIndex].GetX();
+			Real nestY = LoopFunctions->NestPositions[selectedNestIndex].GetY();
+			if(nestX == 0.0 && nestY == -0.3) {
+				predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest2ExitPoints;
+			} else if(nestX == -0.3 && nestY == 0.0) {
+				predefinedNestEntryPath = LoopFunctions->nest2EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest1ExitPoints;
+			} else if(nestX == 0.0 && nestY == 0.3) {
+				predefinedNestEntryPath = LoopFunctions->nest3EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest4ExitPoints;
+			} else if(nestX == 0.3 && nestY == 0.0) {
+				predefinedNestEntryPath = LoopFunctions->nest4EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest3ExitPoints;
+			}
+		} else {
+			SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex-1]);
+			SetIsHeadingToNest(false);
+		}
+
 	}
 
 	if(isFollowingNestPredefinedEntryPath && isHoldingFood) {
@@ -831,10 +1021,12 @@ void CPFA_controller::FollowingEntryPath() {
 	if(isHeadingToEntryPoint && isHoldingFood) {
 		if(IsInTheNest(LoopFunctions->NestPositions[selectedNestIndex])) {
 
+			Wait(25);
+
 			// argos::LOG << GetId() << " Reached nest. Dropping food and exiting." << std::endl;
 			
 			// Remove this robot from the path queue
-			LoopFunctions->RemoveRobotFromPathQueueToNest(selectedNestIndex, GetId());
+			// LoopFunctions->RemoveRobotFromPathQueueToNest(selectedNestIndex, GetId());
 
 			isFollowingNestPredefinedExitPath = true;
 			predefinedNestExitPathIndex = 0;
@@ -929,6 +1121,9 @@ void CPFA_controller::Exiting() {
 		argos::Real distanceToCurrentWaypoint = (currentPos - currentTarget).Length();
 		if(distanceToCurrentWaypoint < 0.15) {
 			predefinedNestExitPathIndex++;
+			if(predefinedNestExitPathIndex == 4) {
+				LoopFunctions->RemoveRobotFromPathQueueToNest(selectedNestIndex, GetId());
+			}
 			if(predefinedNestExitPathIndex >= predefinedNestExitPath.size()-1) {
 				isFollowingNestPredefinedExitPath = false;
 			} else {
@@ -980,6 +1175,8 @@ void CPFA_controller::Exiting() {
 		isReachedThirdInnerCircle = false;
 		isHitFirstInnerCircle = false;
 		isHitSecondInnerCircle = false;
+		isFollowingAvoidance = false;
+		isNearForbiddenArea = false;
 		// isEndingForbiddenArea = false;
 		predefinedPathIndex = 0;
 		predefinedNestExitPathIndex = 0;
@@ -1430,6 +1627,7 @@ string CPFA_controller::GetStatus(){//qilu 10/22
     else if (CPFA_state ==SEARCHING)return "SEARCHING";
     else if (CPFA_state == RETURNING)return "RETURNING";
     else if (CPFA_state == SURVEYING) return "SURVEYING";
+	else if (CPFA_state == FOLLOWING_ENTRY_PATH) return "FOLLOWING_ENTRY_PATH";
     //else if (MPFA_state == INACTIVE) return "INACTIVE";
     else return "SHUTDOWN";
     

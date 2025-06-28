@@ -104,12 +104,12 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		double getRateOfLayingPheromone();
 		double getRateOfPheromoneDecay();
 
-		// bool IsNearRedCircle(argos::CVector2 p);
+		bool IsNearExitPoint(const argos::CVector2& position);
 
 		// Red circle (barrier) management functions
 		bool IsNearRedCircle(const argos::CVector2& position);
 		bool IsInsideRedCircle(const argos::CVector2& position);
-		bool IsNearForbiddenArea(const argos::CVector2& position);
+		CircleEntry IsNearForbiddenArea(const argos::CVector2& position);
 		argos::CVector2 GetClosestExitPoint(const argos::CVector2& robotPosition);
 		argos::CVector2 GetClosestNest(argos::CVector2& robotPosition);
 		std::vector<argos::CVector2> GetAllEntryPoints();

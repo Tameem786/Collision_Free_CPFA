@@ -85,38 +85,20 @@ void CPFA_qt_user_functions::DrawNest() {
 
     // /* 3d cartesian coordinates of the nest */
     // CVector3 nest_3d(x_coordinate, y_coordinate, elevation);
-
-    // Draw red circle around nest
-    const Real fRedCircleRadius = (loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier) + 0.1f; // Double the nest radius
-    const UInt32 unNumSegments = 50;
-    const Real arcStart = M_PI / 10.0;      // 30 degrees in radians
-    const Real arcEnd = M_PI / 2.0;        // 90 degrees in radians
-    const Real fDeltaAngle = (arcEnd - arcStart) / unNumSegments;
     
-    // Draw the circle using ARGoS drawing functions
-    for(UInt32 i = 0; i < unNumSegments; ++i) {
-        Real fAngle1 = arcStart + fDeltaAngle * i;
-        Real fAngle2 = arcStart + fDeltaAngle * (i + 1);
-        
-        CVector3 cStart(fRedCircleRadius * Cos(CRadians(fAngle1)),
-                        fRedCircleRadius * Sin(CRadians(fAngle1)),
-                        0.1f);
-        
-        // loopFunctions.forbiddenAreaCoordinates.push_back(CVector2(cStart.GetX(), cStart.GetY()));
-
-        CVector3 cEnd(fRedCircleRadius * Cos(CRadians(fAngle2)),
-                    fRedCircleRadius * Sin(CRadians(fAngle2)),
-                    0.1f);
-        
-        DrawRay(CRay3(cStart, cEnd), CColor::BROWN, 1.0f);
-    }
+    
+    // Draw entry point marker (north point of the circle)
+    CVector3 entryPoint(loopFunctions.RedCirclePosition.GetX(), 
+                       loopFunctions.RedCirclePosition.GetY() + loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier,
+                       0.1f);
+    DrawCylinder(entryPoint, CQuaternion(), 0.01, 0.01, CColor::BLUE);
     
     // // SOLUTION 1: Only generate coordinates once (recommended)
     if(loopFunctions.CircleCoordinates.empty()) {
         GenerateCircleCoordinates();
-    } else {
-        DrawCircleFromCoordinates();
     }
+    
+    DrawCircleFromCoordinates();
     
     // // Draw the circle using pre-generated coordinates
     // DrawCircleFromCoordinates();
@@ -127,6 +109,17 @@ void CPFA_qt_user_functions::DrawNest() {
     } else {
         DrawSpiralPaths();
     }
+
+    // if(!loopFunctions.forbiddenAreaCoordinates.empty()) {
+    //     glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
+    //     glLineWidth(1.0f);          // Optional: thicker line
+
+    //     glBegin(GL_LINE_STRIP);     // Connect points in sequence
+    //     for(size_t i = 0; i < loopFunctions.forbiddenAreaCoordinates.size(); ++i) {
+    //         glVertex3f(loopFunctions.forbiddenAreaCoordinates[i].GetX(), loopFunctions.forbiddenAreaCoordinates[i].GetY(), loopFunctions.nest1EntryPoints[i].GetZ() + 0.01f); // Slight lift
+    //     }
+    //     glEnd();
+    // }
 
     if(!loopFunctions.nest1EntryPoints.empty()) {
         glColor3f(0.0f, 0.0f, 1.0f); // Blue again for the line
@@ -227,11 +220,6 @@ void CPFA_qt_user_functions::GenerateSpiralPathCoordinates() {
     const Real fRedCircleRadius = loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier;
     const CVector2 center = loopFunctions.RedCirclePosition;
 
-    // Entry point (bottom of the outer circle)
-    // CVector3 entryPoint(loopFunctions.RedCirclePosition.GetX(), 
-    //                    loopFunctions.RedCirclePosition.GetY() + loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier,
-    //                    0.1f);
-    // LOG << "entryPoint: " << entryPoint.GetX() << ", " << entryPoint.GetY() << std::endl;
     loopFunctions.SpiralPathCoordinates.push_back(loopFunctions.entryPoint);
     
     // Specific point inside the red circle (you can adjust this)

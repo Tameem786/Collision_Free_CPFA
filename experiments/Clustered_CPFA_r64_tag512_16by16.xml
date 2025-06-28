@@ -5,7 +5,7 @@
   <!-- ************************* -->
   <framework>
     <system threads="0"/>
-    <experiment length="6000" random_seed="51356800" ticks_per_second="32"/>
+    <experiment length="6000" random_seed="5135681" ticks_per_second="32"/>
   </framework>
 
   <!-- *************** -->
@@ -91,7 +91,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     <distribute>
       <position center="3.5, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
-      <entity max_trials="100" quantity="4">
+      <entity max_trials="100" quantity="8">
         <foot-bot id="F0-">
           <controller config="CPFA"/>
         </foot-bot>
@@ -101,7 +101,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     <distribute>
       <position center="0.0, 3.5, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
-      <entity max_trials="100" quantity="4">
+      <entity max_trials="100" quantity="8">
         <foot-bot id="F1-">
           <controller config="CPFA"/>
         </foot-bot>
@@ -111,14 +111,14 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     <distribute>
       <position center="-3.5, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
-      <entity max_trials="100" quantity="4">
+      <entity max_trials="100" quantity="8">
         <foot-bot id="F2-">
           <controller config="CPFA"/>
         </foot-bot>
       </entity>
     </distribute>
 
-    <!-- <distribute>
+    <distribute>
       <position center="0.0, -3.5, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
       <entity max_trials="100" quantity="8">
@@ -126,7 +126,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
           <controller config="CPFA"/>
         </foot-bot>
       </entity>
-    </distribute> -->
+    </distribute>
 
   </arena> 
     

@@ -35,6 +35,8 @@ class CPFA_controller : public BaseController {
 		CVector2 FindQueueEndPosition();
 		void ResetQueueState();
 
+		bool CollisionDetection() override;
+
 		Real FoodDistanceTolerance;
 		int selectedNestIndex;
 		int selectedWaitingQueueIndex;
@@ -66,7 +68,11 @@ class CPFA_controller : public BaseController {
 		argos::CVector2 SiteFidelityPosition;
   bool			 updateFidelity; //qilu 09/07/2016
 
-  
+  		argos::CRange<argos::Real> GoStraightAngleRangeInDegreesInRegion;
+		argos::CRange<argos::Real> GoStraightAngleRangeInDegreesGoingToRegion;
+
+		size_t stopCounter = 0;
+		
 		vector<CRay3> myTrail;
 		CColor        TrailColor;
 
@@ -76,7 +82,7 @@ class CPFA_controller : public BaseController {
 
 		bool isCircumnavigatingRedCircle = false;
 		argos::CVector2 circumnavigationFinalTarget;
-		int circumnavigationDirection = 1; // 1 for clockwise, -1 for counterclockwise
+		// int circumnavigationDirection = 1; // 1 for clockwise, -1 for counterclockwise
 
 		bool isInformed;
 		bool isHoldingFood;
@@ -98,7 +104,8 @@ class CPFA_controller : public BaseController {
 			RETURNING = 2,
 			SURVEYING = 3,
 			EXITING = 4,
-			FOLLOWING_ENTRY_PATH = 5
+			FOLLOWING_ENTRY_PATH = 5,
+			FOLLOWING_OUTER_CIRCLE = 6
 		} CPFA_state;
 
 		/* iAnt CPFA state functions */
@@ -109,6 +116,7 @@ class CPFA_controller : public BaseController {
 		void Surveying();
 		void Exiting();
 		void FollowingEntryPath();
+		void FollowingOuterCircle();
 		bool CanEnterPredefinedPath();
 		void GeneratePredefinedPath();
 
@@ -147,8 +155,14 @@ class CPFA_controller : public BaseController {
 		bool isHeadingToEntryPoint;
 		bool hasStartedBoundaryFollow;
 		bool isPausingOnBoundary;
+		bool isFollowingAvoidance;
+		bool isFollowingOuterCircle;
+		bool isWaitingForNest;
 		argos::CVector2 entryPoint;
 		argos::Real redCircleRadius;
+
+		int circumnavigationDirection = 1;
+
 
 		// New helper functions for wall-following behavior
 		void ImplementWallFollowing(argos::Real circleRadius, argos::CVector2 entryPoint);
