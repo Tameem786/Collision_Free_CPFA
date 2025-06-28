@@ -175,6 +175,8 @@ class CPFA_controller : public BaseController {
 		bool isReachedSecondInnerCircle;
 		bool isReachedThirdInnerCircle;
 		bool isReachedFourthInnerCircle;
+		bool isReachedFifthInnerCircle;
+		bool isReachedSixthInnerCircle;
 
 		argos::CVector2 lastWallPosition;
 		argos::Real wallFollowingStartTime;
@@ -199,6 +201,7 @@ class CPFA_controller : public BaseController {
 		int predefinedPathIndexOnSecondInnerCircle;
 		int predefinedPathIndexOnThirdInnerCircle;
 		int predefinedPathIndexOnFourthInnerCircle;
+		int predefinedPathIndexOnFifthInnerCircle;
 		std::vector<argos::CVector2> predefinedPath;
 		std::vector<argos::CVector3> predefinedNestEntryPath;
 		std::vector<argos::CVector3> predefinedNestExitPath;

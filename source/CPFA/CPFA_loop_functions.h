@@ -80,6 +80,8 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		std::vector<argos::CVector2> SecondInnerCircleCoordinates;
 		std::vector<argos::CVector2> ThirdInnerCircleCoordinates;
 		std::vector<argos::CVector2> FourthInnerCircleCoordinates;
+		std::vector<argos::CVector2> FifthInnerCircleCoordinates;
+		std::vector<argos::CVector2> SixthInnerCircleCoordinates;
 
 		argos::CVector3 entryPoint;
 		std::vector<argos::CVector3> nest1EntryPoints;
@@ -150,6 +152,8 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		CircleEntry IsNearFirstInnerCircle(const argos::CVector2& position);
 		CircleEntry IsNearSecondInnerCircle(const argos::CVector2& position);
 		CircleEntry IsNearThirdInnerCircle(const argos::CVector2& position);
+		CircleEntry IsNearFourthInnerCircle(const argos::CVector2& position);
+		CircleEntry IsNearFifthInnerCircle(const argos::CVector2& position);
 		
 	protected:
 
@@ -211,6 +215,7 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		argos::Real FoodRadius;
 		argos::Real FoodRadiusSquared;
 		argos::Real NestRadius;
+		argos::Real RedCircleRadius;
 		argos::Real NestRadiusSquared;
 		argos::Real NestElevation;
 		argos::Real SearchRadiusSquared;

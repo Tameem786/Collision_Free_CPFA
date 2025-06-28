@@ -39,6 +39,8 @@ CPFA_controller::CPFA_controller() :
 		isReachedSecondInnerCircle(false),
 		isReachedThirdInnerCircle(false),
 		isReachedFourthInnerCircle(false),
+		isReachedFifthInnerCircle(false),
+		isReachedSixthInnerCircle(false),
 		isFollowingNestPredefinedEntryPath(false),
 		isFollowingNestPredefinedExitPath(false),
 		isNearForbiddenArea(false),
@@ -337,7 +339,7 @@ void CPFA_controller::Departing()
 
 	// Calculate red circle radius if not already set
 	if(redCircleRadius == 0.0) {
-		redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+		redCircleRadius = LoopFunctions->RedCircleRadius;
 	}
 
 	// Update target if we're circumnavigating and need course correction
@@ -417,7 +419,7 @@ void CPFA_controller::Searching() {
      
         // Calculate red circle radius if not already set
         if(redCircleRadius == 0.0) {
-            redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+            redCircleRadius = LoopFunctions->RedCircleRadius;
         }
 
         // Check if current target is inside red circle
@@ -627,7 +629,7 @@ void CPFA_controller::Returning() {
 			argos::CVector2 directionAwayFromCenter = (currentPos - LoopFunctions->RedCirclePosition).Normalize();
 			
 			// Calculate red circle radius if not already set
-			redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+			redCircleRadius = LoopFunctions->RedCircleRadius;
 			
 			// Set target to a position further away from the red circle
 			argos::Real bounceDistance = redCircleRadius + 1.0; // Move 1 unit beyond the red circle
@@ -720,7 +722,7 @@ void CPFA_controller::Returning() {
 
 
 		//Version 2.0: Tameem
-		if(isHoldingFood && !isReachedThirdInnerCircle && !isNearForbiddenArea) {
+		if(isHoldingFood && !isReachedFifthInnerCircle && !isNearForbiddenArea) {
 
 			if(LoopFunctions->IsNearRedCircle(GetPosition()) || LoopFunctions->IsInsideRedCircle(GetPosition())) {
 
@@ -729,16 +731,17 @@ void CPFA_controller::Returning() {
 					isNearForbiddenArea = true;
 					isFollowingAvoidance = true;
 					CVector2 entryPoint(LoopFunctions->RedCirclePosition.GetX(), 
-						LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier
+						LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->RedCircleRadius
 						);
 					SetTarget(entryPoint);
 					SetIsHeadingToNest(false);
 				}
 				
-				if(LoopFunctions->IsNearThirdInnerCircle(GetPosition()).isHit) {
-					isReachedThirdInnerCircle = true;
+				if(LoopFunctions->IsNearFifthInnerCircle(GetPosition()).isHit) {
+					// LOG << GetId() << " hit at fifth inner circle" << std::endl;
+					isReachedFifthInnerCircle = true;
 					isFollowingPredefinedPath = true;
-					predefinedPathIndex = LoopFunctions->IsNearThirdInnerCircle(GetPosition()).positionIndex;
+					predefinedPathIndex = LoopFunctions->IsNearFifthInnerCircle(GetPosition()).positionIndex;
 					// LoopFunctions->AddRobotToPathQueue(GetId());
 					SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
 					SetIsHeadingToNest(false);
@@ -749,18 +752,33 @@ void CPFA_controller::Returning() {
 
 					if(LoopFunctions->IsNearFirstInnerCircle(GetPosition()).isHit) {
 						predefinedPathIndexOnFirstInnerCircle = LoopFunctions->IsNearFirstInnerCircle(GetPosition()).positionIndex;
-						isHitFirstInnerCircle = true;
+						isReachedFirstInnerCircle = true;
 					}
 					if(LoopFunctions->IsNearSecondInnerCircle(GetPosition()).isHit) {
 						predefinedPathIndexOnSecondInnerCircle = LoopFunctions->IsNearSecondInnerCircle(GetPosition()).positionIndex;
-						isHitSecondInnerCircle = true;
+						isReachedSecondInnerCircle = true;
+					}
+					if(LoopFunctions->IsNearThirdInnerCircle(GetPosition()).isHit) {
+						predefinedPathIndexOnThirdInnerCircle = LoopFunctions->IsNearThirdInnerCircle(GetPosition()).positionIndex;
+						isReachedThirdInnerCircle = true;
+					}
+					if(LoopFunctions->IsNearFourthInnerCircle(GetPosition()).isHit) {
+						predefinedPathIndexOnFourthInnerCircle = LoopFunctions->IsNearFourthInnerCircle(GetPosition()).positionIndex;
+						isReachedFourthInnerCircle = true;
 					}
 
 					if(CollisionDetection()) {
-						if(isReachedThirdInnerCircle) {
+						if(isReachedFifthInnerCircle) {
+							predefinedPathIndex = predefinedPathIndexOnFourthInnerCircle;
+						} else if(isReachedFourthInnerCircle) {
+							predefinedPathIndex = predefinedPathIndexOnThirdInnerCircle;
+						} else if(isReachedThirdInnerCircle) {
 							predefinedPathIndex = predefinedPathIndexOnSecondInnerCircle;
-						} else if(isHitSecondInnerCircle || isHitFirstInnerCircle) {
+						} else if(isReachedSecondInnerCircle || isReachedFirstInnerCircle) {
+							
 							predefinedPathIndex = predefinedPathIndexOnFirstInnerCircle;
+						} else {
+							return;
 						}
 					
 						SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
@@ -775,12 +793,19 @@ void CPFA_controller::Returning() {
 					argos::CVector2 directionToCenter = (LoopFunctions->RedCirclePosition - currentPos).Normalize();
 					
 					//fRedCircleRadius * 0.9f - First Inner Circle
-					//fRedCircleRadius * 0.75f - Second Inner Circle
-					//fRedCircleRadius * 0.6f - Third Inner Circle
-					//fRedCircleRadius * 0.45f - Fourth Inner Circle
+					//fRedCircleRadius * 0.8f - Second Inner Circle
+					//fRedCircleRadius * 0.7f - Third Inner Circle
+					//fRedCircleRadius * 0.6f - Fourth Inner Circle
+					//fRedCircleRadius * 0.5f - Fourth Inner Circle
 
+					// Real radius =  redCircleRadius - 0.2;
+					// radius -= 0.2;
+					// radius -= 0.2;
+					// radius -= 0.2;
+					// radius -= 0.2;
+					
 					// Set target to a point slightly outside the red circle (safe distance)
-					argos::Real safeDistance = (redCircleRadius * 0.6f) + 0.1;
+					argos::Real safeDistance = (redCircleRadius * 0.5f) + 0.1;
 					argos::CVector2 targetOnCircle = LoopFunctions->RedCirclePosition - directionToCenter * safeDistance;
 					
 					SetTarget(targetOnCircle);
@@ -812,7 +837,7 @@ void CPFA_controller::Returning() {
 			if(IsAtTarget()) {
 				isNearForbiddenArea = false;
 				isFollowingAvoidance = false;
-				isReachedThirdInnerCircle = true;
+				isReachedFifthInnerCircle = true;
 				isFollowingPredefinedPath = true;
 				// LoopFunctions->AddRobotToPathQueue(GetId());
 				predefinedPathIndex = 0;
@@ -822,7 +847,7 @@ void CPFA_controller::Returning() {
 				return;
 			} else {
 				CVector2 entryPoint(LoopFunctions->RedCirclePosition.GetX(), 
-                       LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier
+                       LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->RedCircleRadius
                     );
 				SetTarget(entryPoint);
 				SetIsHeadingToNest(false);
@@ -835,7 +860,7 @@ void CPFA_controller::Returning() {
 void CPFA_controller::FollowingOuterCircle() {
 	if(isFollowingOuterCircle && isHoldingFood) {
 		if(IsAtTarget()) {
-			isReachedThirdInnerCircle = true;
+			isReachedFifthInnerCircle = true;
 			isFollowingPredefinedPath = true;
 			isFollowingOuterCircle = false;
 			// LoopFunctions->AddRobotToPathQueue(GetId());
@@ -915,7 +940,7 @@ void CPFA_controller::FollowingEntryPath() {
 	argos::Real distanceToCurrentWaypoint = (currentPos - currentTarget).Length();
 	
 	// Check if we've reached the current waypoint
-	if(distanceToCurrentWaypoint < 0.15 && isFollowingPredefinedPath && !isWaitingForNest) { // Waypoint reached threshold
+	if(distanceToCurrentWaypoint < 0.1 && isFollowingPredefinedPath && !isWaitingForNest) { // Waypoint reached threshold
 		predefinedPathIndex++;
 
 		// Check if we've completed the path (reached nest) - Works Fine Up to Here
@@ -1021,7 +1046,7 @@ void CPFA_controller::FollowingEntryPath() {
 	if(isHeadingToEntryPoint && isHoldingFood) {
 		if(IsInTheNest(LoopFunctions->NestPositions[selectedNestIndex])) {
 
-			Wait(25);
+			Wait(5);
 
 			isFollowingNestPredefinedExitPath = true;
 			predefinedNestExitPathIndex = 0;
@@ -1167,9 +1192,11 @@ void CPFA_controller::Exiting() {
 		isNearForbiddenArea = false;
 		isFollowingNestPredefinedExitPath = false;
 		isFollowingNestPredefinedEntryPath = false;
+		isReachedFirstInnerCircle = false;
+		isReachedSecondInnerCircle = false;
 		isReachedThirdInnerCircle = false;
-		isHitFirstInnerCircle = false;
-		isHitSecondInnerCircle = false;
+		isReachedFourthInnerCircle = false;
+		isReachedFifthInnerCircle = false;
 		isFollowingAvoidance = false;
 		isNearForbiddenArea = false;
 		// isEndingForbiddenArea = false;
@@ -1190,7 +1217,7 @@ bool CPFA_controller::IsPathThroughRedCircle(const argos::CVector2& start, const
     
     // Calculate red circle radius if not set
     if(redCircleRadius == 0.0) {
-        redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+        redCircleRadius = LoopFunctions->RedCircleRadius;
     }
     
     argos::CVector2 circleCenter = LoopFunctions->RedCirclePosition;
@@ -1301,7 +1328,7 @@ void CPFA_controller::SetRandomSearchLocation(bool isExit) {
 
     // Calculate red circle radius if not already set
     if(redCircleRadius == 0.0) {
-        redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+        redCircleRadius = LoopFunctions->RedCircleRadius;
     }
 
 	if(isExit) {
@@ -1385,7 +1412,7 @@ void CPFA_controller::SetHoldingFood() {
                 
                 // Calculate red circle radius if not already set
                 if(redCircleRadius == 0.0) {
-                    redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+                    redCircleRadius = LoopFunctions->RedCircleRadius;
                 }
 
                 while(!validPosition) {

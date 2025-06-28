@@ -89,7 +89,7 @@ void CPFA_qt_user_functions::DrawNest() {
     
     // Draw entry point marker (north point of the circle)
     CVector3 entryPoint(loopFunctions.RedCirclePosition.GetX(), 
-                       loopFunctions.RedCirclePosition.GetY() + loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier,
+                       loopFunctions.RedCirclePosition.GetY() + loopFunctions.RedCircleRadius,
                        0.1f);
     DrawCylinder(entryPoint, CQuaternion(), 0.01, 0.01, CColor::BLUE);
     
@@ -217,7 +217,7 @@ void CPFA_qt_user_functions::DrawNest() {
 void CPFA_qt_user_functions::GenerateSpiralPathCoordinates() {
     loopFunctions.SpiralPathCoordinates.clear();
     
-    const Real fRedCircleRadius = loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier;
+    const Real fRedCircleRadius = loopFunctions.RedCircleRadius;
     const CVector2 center = loopFunctions.RedCirclePosition;
 
     loopFunctions.SpiralPathCoordinates.push_back(loopFunctions.entryPoint);
@@ -294,7 +294,7 @@ void CPFA_qt_user_functions::DrawSpiralPaths() {
 
 // Helper function to generate circle coordinates only once
 void CPFA_qt_user_functions::GenerateCircleCoordinates() {
-    const Real fRedCircleRadius = loopFunctions.NestRadius * loopFunctions.RedCircleRadiusMultiplier;
+    const Real fRedCircleRadius = loopFunctions.RedCircleRadius;
     const UInt32 unNumSegments = 50;
     const Real fDeltaAngle = CRadians::TWO_PI.GetValue() / unNumSegments;
     
