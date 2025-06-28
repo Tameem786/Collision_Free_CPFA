@@ -1550,6 +1550,7 @@ string CPFA_controller::GetStatus(){//qilu 10/22
     else if (CPFA_state == RETURNING)return "RETURNING";
     else if (CPFA_state == SURVEYING) return "SURVEYING";
 	else if (CPFA_state == FOLLOWING_ENTRY_PATH) return "FOLLOWING_ENTRY_PATH";
+	else if (CPFA_state == EXITING) return "EXITING";
     //else if (MPFA_state == INACTIVE) return "INACTIVE";
     else return "SHUTDOWN";
     
