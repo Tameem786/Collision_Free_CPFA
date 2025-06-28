@@ -101,7 +101,6 @@ class CPFA_controller : public BaseController {
 		void Surveying();
 		void Exiting();
 		void FollowingEntryPath();
-		void LeavingRedCircle();
 		bool CanEnterPredefinedPath();
 		void GeneratePredefinedPath();
 
@@ -138,7 +137,6 @@ class CPFA_controller : public BaseController {
 		bool hasSetEntryPoint;
 		bool isFollowingCircleBoundary;
 		bool isHeadingToEntryPoint;
-		bool hasStartedBoundaryFollow;
 		bool isPausingOnBoundary;
 		bool isLeavingForColliding;
 		bool isWaitingForNest;

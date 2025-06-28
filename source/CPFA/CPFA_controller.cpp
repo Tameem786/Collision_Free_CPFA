@@ -26,7 +26,6 @@ CPFA_controller::CPFA_controller() :
 		isFollowingCircleBoundary(false),
 		entryPoint(0.0, 0.0),
 		redCircleRadius(0.0),
-		hasStartedBoundaryFollow(false),
 		isPausingOnBoundary(false),
 		isBouncing(false),
 		nextSearchType(RANDOM_SEARCH),
@@ -216,9 +215,6 @@ void CPFA_controller::CPFA() {
 			break;
 		case FOLLOWING_ENTRY_PATH:
 			FollowingEntryPath();
-			break;
-		case LEAVING_RED_CIRCLE:
-			LeavingRedCircle();
 			break;
 	}
 }
@@ -615,7 +611,6 @@ void CPFA_controller::Returning() {
 				}
 				
 				// Reset all flags for next food collection cycle
-				hasStartedBoundaryFollow = false;
 				isFollowingCircleBoundary = false;
 				isPausingOnBoundary = false;
 				isHeadingToEntryPoint = false;
@@ -631,7 +626,7 @@ void CPFA_controller::Returning() {
 	} else {
 
 		// SIMPLIFIED LOGIC: When robot picks up food, set target to red circle, then start boundary following
-		if(isHoldingFood && !hasStartedBoundaryFollow && !isFollowingCircleBoundary) {
+		if(isHoldingFood && !isFollowingCircleBoundary) {
 			// Calculate red circle parameters
 			redCircleRadius = LoopFunctions->RedCircleRadius;
 			
@@ -644,7 +639,6 @@ void CPFA_controller::Returning() {
 				              LoopFunctions->RedCirclePosition.GetY() + redCircleRadius);
 				
 				SetIsHeadingToNest(false);
-				hasStartedBoundaryFollow = true;
 				isFollowingCircleBoundary = true;
 				
 				// Start boundary following immediately by setting first target
@@ -751,16 +745,8 @@ void CPFA_controller::FollowingEntryPath() {
 	argos::Real distanceToCurrentWaypoint = (currentPos - currentTarget).Length();
 	
 	// Check if we've reached the current waypoint
-	if(distanceToCurrentWaypoint < 0.15 && isFollowingPredefinedPath && !isWaitingForNest) { // Waypoint reached threshold
+	if(distanceToCurrentWaypoint < 0.1 && isFollowingPredefinedPath && !isWaitingForNest) { // Waypoint reached threshold
 
-		// if(CollisionDetection()) {
-		// 	if(GetId() == "F3-1") {
-		// 		LOG << GetId() << " detect collision. Leaving..." << std::endl;
-		// 	}
-		// 	isLeavingForColliding = true;
-		// 	CPFA_state = LEAVING_RED_CIRCLE;
-		// 	return;
-		// }
 		predefinedPathIndex++;
 
 		// Check if we've completed the path (reached nest) - Works Fine Up to Here
@@ -912,6 +898,7 @@ bool CPFA_controller::CollisionDetection() {
     if (GetStatus() == "FOLLOWING_ENTRY_PATH" || GetStatus() == "EXITING") {
         if (GoStraightAngleRangeInDegreesInRegion.WithinMinBoundIncludedMaxBoundIncluded(collisionAngle)
             && collisionVector.Length() > 0.0) {
+			collision_counter++;
 			Stop();
             stopCounter++; // Increment the stop counter
             if (stopCounter > 75) {
@@ -960,42 +947,6 @@ bool CPFA_controller::CollisionDetection() {
 	}
 
 	return isCollisionDetected;
-}
-
-void CPFA_controller::LeavingRedCircle() {
-	argos::CVector2 currentPos = GetPosition();
-    argos::CVector2 directionFromCenter = currentPos - LoopFunctions->RedCirclePosition;
-    directionFromCenter.Normalize();
-    
-    // Position robot just outside the red circle
-    argos::CVector2 exitPosition = LoopFunctions->RedCirclePosition + directionFromCenter * (LoopFunctions->RedCircleRadius + 0.5);
-    
-    SetTarget(exitPosition);
-    
-    // Once robot reaches exit position, reset to path entry
-	if(isLeavingForColliding) {
-		if((currentPos - exitPosition).Length() < 0.1) {
-			if(GetId() == "F3-1") {
-				LOG << GetId() << " Left. Returning Entry Point." << std::endl;
-			}
-			isLeavingForColliding = false;
-			hasStartedBoundaryFollow = false;
-			isFollowingCircleBoundary = false;
-			isPausingOnBoundary = false;
-			isHeadingToEntryPoint = false;
-			isGivingUpSearch = false;
-			isFollowingPredefinedPath = false;
-			isFollowingNestPredefinedEntryPath = false;
-			isFollowingNestPredefinedExitPath = false;
-			predefinedNestEntryPathIndex = 0;
-			predefinedNestExitPathIndex = 0;
-			predefinedPathIndex = 0;
-			CPFA_state = RETURNING;
-			return;
-		} else {
-			SetTarget(exitPosition);
-		}
-	}
 }
 
 // NEW: Generate predefined spiral/curved path from entry point to nest
@@ -1092,7 +1043,6 @@ void CPFA_controller::Exiting() {
 		}
 
 		// Reset all flags for next food collection cycle
-		hasStartedBoundaryFollow = false;
 		isFollowingCircleBoundary = false;
 		isPausingOnBoundary = false;
 		isHeadingToEntryPoint = false;
