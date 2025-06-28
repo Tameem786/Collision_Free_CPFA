@@ -161,6 +161,7 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		argos::Real FoodRadius;
 		argos::Real FoodRadiusSquared;
 		argos::Real NestRadius;
+		argos::Real RedCircleRadius;
 		argos::Real NestRadiusSquared;
 		argos::Real NestElevation;
 		argos::Real SearchRadiusSquared;

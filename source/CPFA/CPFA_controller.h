@@ -29,6 +29,8 @@ class CPFA_controller : public BaseController {
 		bool IsUsingSiteFidelity();
 		bool IsInTheNest(CVector2 position);
 
+		bool CollisionDetection() override;
+
 		Real FoodDistanceTolerance;
 		int selectedNestIndex;
 
@@ -42,6 +44,11 @@ class CPFA_controller : public BaseController {
 
 	private:
   string 			controllerID;//qilu 07/26/2016
+
+  		argos::CRange<argos::Real> GoStraightAngleRangeInDegreesInRegion;
+		argos::CRange<argos::Real> GoStraightAngleRangeInDegreesGoingToRegion;
+
+		size_t stopCounter = 0;
 
 		CPFA_loop_functions* LoopFunctions;
 		argos::CRandom::CRNG* RNG;
@@ -134,6 +141,7 @@ class CPFA_controller : public BaseController {
 		bool hasStartedBoundaryFollow;
 		bool isPausingOnBoundary;
 		bool isLeavingForColliding;
+		bool isWaitingForNest;
 		argos::CVector2 entryPoint;
 		argos::Real redCircleRadius;
 

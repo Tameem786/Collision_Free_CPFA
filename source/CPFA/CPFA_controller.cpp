@@ -32,8 +32,11 @@ CPFA_controller::CPFA_controller() :
 		nextSearchType(RANDOM_SEARCH),
 		isFollowingNestPredefinedEntryPath(false),
 		isFollowingNestPredefinedExitPath(false),
-		isLeavingForColliding(false)
+		isLeavingForColliding(false),
+		isWaitingForNest(false)
 {
+	GoStraightAngleRangeInDegreesInRegion.Set(-30.0, 30.0);
+	GoStraightAngleRangeInDegreesGoingToRegion.Set(-55.0, 55.0);
 	// redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
 }
 
@@ -156,7 +159,7 @@ void CPFA_controller::Reset() {
 	argos::CVector2 directionToNest = (LoopFunctions->RedCirclePosition - currentPos).Normalize();
 
 	// Set target to a point slightly outside the red circle (safe distance)
-	argos::Real redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+	argos::Real redCircleRadius = LoopFunctions->RedCircleRadius;
 	argos::Real safeDistance = redCircleRadius + 0.1;
 	argos::CVector2 targetOnCircle = LoopFunctions->RedCirclePosition - directionToNest * safeDistance;
 	
@@ -311,7 +314,7 @@ void CPFA_controller::Departing()
 
 	// Calculate red circle radius if not already set
 	if(redCircleRadius == 0.0) {
-		redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+		redCircleRadius = LoopFunctions->RedCircleRadius;
 	}
 
 	// Update target if we're circumnavigating and need course correction
@@ -391,7 +394,7 @@ void CPFA_controller::Searching() {
      
         // Calculate red circle radius if not already set
         if(redCircleRadius == 0.0) {
-            redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+            redCircleRadius = LoopFunctions->RedCircleRadius;
         }
 
         // Check if current target is inside red circle
@@ -536,7 +539,7 @@ void CPFA_controller::Returning() {
 			argos::CVector2 directionAwayFromCenter = (currentPos - LoopFunctions->RedCirclePosition).Normalize();
 			
 			// Calculate red circle radius if not already set
-			redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+			redCircleRadius = LoopFunctions->RedCircleRadius;
 			
 			// Set target to a position further away from the red circle
 			argos::Real bounceDistance = redCircleRadius + 1.0; // Move 1 unit beyond the red circle
@@ -630,7 +633,7 @@ void CPFA_controller::Returning() {
 		// SIMPLIFIED LOGIC: When robot picks up food, set target to red circle, then start boundary following
 		if(isHoldingFood && !hasStartedBoundaryFollow && !isFollowingCircleBoundary) {
 			// Calculate red circle parameters
-			redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+			redCircleRadius = LoopFunctions->RedCircleRadius;
 			
 			// Check if robot is already near the red circle
 			if(LoopFunctions->IsNearRedCircle(GetPosition())) {
@@ -748,16 +751,16 @@ void CPFA_controller::FollowingEntryPath() {
 	argos::Real distanceToCurrentWaypoint = (currentPos - currentTarget).Length();
 	
 	// Check if we've reached the current waypoint
-	if(distanceToCurrentWaypoint < 0.15 && isFollowingPredefinedPath && !isLeavingForColliding) { // Waypoint reached threshold
+	if(distanceToCurrentWaypoint < 0.15 && isFollowingPredefinedPath && !isWaitingForNest) { // Waypoint reached threshold
 
-		if(CollisionDetection()) {
-			if(GetId() == "F3-1") {
-				LOG << GetId() << " detect collision. Leaving..." << std::endl;
-			}
-			isLeavingForColliding = true;
-			CPFA_state = LEAVING_RED_CIRCLE;
-			return;
-		}
+		// if(CollisionDetection()) {
+		// 	if(GetId() == "F3-1") {
+		// 		LOG << GetId() << " detect collision. Leaving..." << std::endl;
+		// 	}
+		// 	isLeavingForColliding = true;
+		// 	CPFA_state = LEAVING_RED_CIRCLE;
+		// 	return;
+		// }
 		predefinedPathIndex++;
 
 		// Check if we've completed the path (reached nest) - Works Fine Up to Here
@@ -780,7 +783,7 @@ void CPFA_controller::FollowingEntryPath() {
 				if(nestX == 0.0 && nestY == -0.3) {
 					predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest2ExitPoints;
-				} else if(nestX == -3.0 && nestY == 0.0) {
+				} else if(nestX == -0.3 && nestY == 0.0) {
 					predefinedNestEntryPath = LoopFunctions->nest2EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest1ExitPoints;
 				} else if(nestX == 0.0 && nestY == 0.3) {
@@ -792,12 +795,49 @@ void CPFA_controller::FollowingEntryPath() {
 				}
 
 			} else {
+				isWaitingForNest = true;
+				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex-1]);
+				SetIsHeadingToNest(false);
 				argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
 			}
 			
 		} else {
 			// Move to next waypoint
 			SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+		}
+
+	}
+
+	if(isWaitingForNest && isHoldingFood) {
+		int availablePathToNest = LoopFunctions->GetAvailablePathToNest();
+		if(availablePathToNest != -1) {
+			selectedNestIndex = availablePathToNest;
+			// LoopFunctions->RemoveRobotFromPathQueue(GetId());
+			LoopFunctions->AddRobotToPathQueueToNest(selectedNestIndex, GetId());
+
+			isFollowingPredefinedPath = false;
+			isFollowingNestPredefinedEntryPath = true;
+			isWaitingForNest = false;
+			predefinedNestEntryPathIndex = 0;
+
+			Real nestX = LoopFunctions->NestPositions[selectedNestIndex].GetX();
+			Real nestY = LoopFunctions->NestPositions[selectedNestIndex].GetY();
+			if(nestX == 0.0 && nestY == -0.3) {
+				predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest2ExitPoints;
+			} else if(nestX == -0.3 && nestY == 0.0) {
+				predefinedNestEntryPath = LoopFunctions->nest2EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest1ExitPoints;
+			} else if(nestX == 0.0 && nestY == 0.3) {
+				predefinedNestEntryPath = LoopFunctions->nest3EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest4ExitPoints;
+			} else if(nestX == 0.3 && nestY == 0.0) {
+				predefinedNestEntryPath = LoopFunctions->nest4EntryPoints;
+				predefinedNestExitPath = LoopFunctions->nest3ExitPoints;
+			}
+		} else {
+			SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex-1]);
+			SetIsHeadingToNest(false);
 		}
 
 	}
@@ -822,8 +862,7 @@ void CPFA_controller::FollowingEntryPath() {
 	if(isHeadingToEntryPoint && isHoldingFood) {
 		if(IsInTheNest(LoopFunctions->NestPositions[selectedNestIndex])) {
 
-			LOG << GetId() << " started waiting..." << std::endl;
-			Wait(15);
+			Wait(5);
 
 			// argos::LOG << GetId() << " Reached nest. Dropping food and exiting." << std::endl;
 
@@ -863,16 +902,73 @@ void CPFA_controller::FollowingEntryPath() {
 	}
 }
 
-void CPFA_controller::LeavingRedCircle() {
-	if(GetId() == "F3-1") {
-		LOG << GetId() << " Leaving..." << std::endl;
+bool CPFA_controller::CollisionDetection() {
+	//log current CPFA State
+	argos::CVector2 collisionVector = GetCollisionVector();
+	argos::Real collisionAngle = ToDegrees(collisionVector.Angle()).GetValue();
+	bool isCollisionDetected = false;
+	
+	// this is the normal collision logic where a robot determines a where it is colliding with another robot and the turn it must take.
+    if (GetStatus() == "FOLLOWING_ENTRY_PATH" || GetStatus() == "EXITING") {
+        if (GoStraightAngleRangeInDegreesInRegion.WithinMinBoundIncludedMaxBoundIncluded(collisionAngle)
+            && collisionVector.Length() > 0.0) {
+			Stop();
+            stopCounter++; // Increment the stop counter
+            if (stopCounter > 75) {
+                // Resume movement after 200 timesteps
+                stopCounter = 0; // Reset the counter
+            }
+			Stop();
+            return true; // Keep the robot stopped
+        } else{
+			// Reset the stop counter if no collision is detected
+			stopCounter = 0;
+		}
+    }
+
+	else{
+	
+		if(GoStraightAngleRangeInDegrees.WithinMinBoundIncludedMaxBoundIncluded(collisionAngle)
+			&& collisionVector.Length() > 0.0) {
+
+			// if a robot is following a path, we dont want to avoid collisions since paths dont overlap. So there will be no
+			// collisions as longs other robots don't interfere.
+			isCollisionDetected = true;
+			collision_counter++;
+			// if(goingtoentry) {
+			// 	return isCollisionDetected;
+			// }	 
+			Stop();
+
+
+			while(MovementStack.size() > 0) MovementStack.pop();
+
+			PushMovement(FORWARD, SearchStepSize);
+
+			Real randomNumber = RNG->Uniform(CRange<Real>(0.5, 1.0));
+			collisionDelay = SimulationTick() + (size_t)(randomNumber*SimulationTicksPerSecond());//qilu 10/26/2016	
+
+			if(collisionAngle <= 0.0)  {
+				//argos::LOG << collisionAngle << std::endl << collisionVector << std::endl << std::endl;
+				SetLeftTurn(collisionAngle); //qilu 09/24/2016
+			} else {
+				//argos::LOG << collisionAngle << std::endl << collisionVector << std::endl << std::endl;
+				SetRightTurn(collisionAngle); //qilu 09/24/2016
+			}
+
+		}
 	}
+
+	return isCollisionDetected;
+}
+
+void CPFA_controller::LeavingRedCircle() {
 	argos::CVector2 currentPos = GetPosition();
     argos::CVector2 directionFromCenter = currentPos - LoopFunctions->RedCirclePosition;
     directionFromCenter.Normalize();
     
     // Position robot just outside the red circle
-    argos::CVector2 exitPosition = LoopFunctions->RedCirclePosition + directionFromCenter * ((LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier) + 0.5);
+    argos::CVector2 exitPosition = LoopFunctions->RedCirclePosition + directionFromCenter * (LoopFunctions->RedCircleRadius + 0.5);
     
     SetTarget(exitPosition);
     
@@ -1021,7 +1117,7 @@ bool CPFA_controller::IsPathThroughRedCircle(const argos::CVector2& start, const
     
     // Calculate red circle radius if not set
     if(redCircleRadius == 0.0) {
-        redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+        redCircleRadius = LoopFunctions->RedCircleRadius;
     }
     
     argos::CVector2 circleCenter = LoopFunctions->RedCirclePosition;
@@ -1132,7 +1228,7 @@ void CPFA_controller::SetRandomSearchLocation(bool isExit) {
 
     // Calculate red circle radius if not already set
     if(redCircleRadius == 0.0) {
-        redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+        redCircleRadius = LoopFunctions->RedCircleRadius;
     }
 
 	if(isExit) {
@@ -1216,7 +1312,7 @@ void CPFA_controller::SetHoldingFood() {
                 
                 // Calculate red circle radius if not already set
                 if(redCircleRadius == 0.0) {
-                    redCircleRadius = LoopFunctions->NestRadius * LoopFunctions->RedCircleRadiusMultiplier;
+                    redCircleRadius = LoopFunctions->RedCircleRadius;
                 }
 
                 while(!validPosition) {
@@ -1453,6 +1549,7 @@ string CPFA_controller::GetStatus(){//qilu 10/22
     else if (CPFA_state ==SEARCHING)return "SEARCHING";
     else if (CPFA_state == RETURNING)return "RETURNING";
     else if (CPFA_state == SURVEYING) return "SURVEYING";
+	else if (CPFA_state == FOLLOWING_ENTRY_PATH) return "FOLLOWING_ENTRY_PATH";
     //else if (MPFA_state == INACTIVE) return "INACTIVE";
     else return "SHUTDOWN";
     

@@ -35,6 +35,7 @@ CPFA_loop_functions::CPFA_loop_functions() :
 	FoodRadius(0.05),
 	FoodRadiusSquared(0.0025),
 	NestRadius(0.12),
+    RedCircleRadius(2.0),
 	NestRadiusSquared(0.0625),
 	NestElevation(0.01),
 	RedCirclePosition(0.0, 0.0),
@@ -276,17 +277,17 @@ void CPFA_loop_functions::SetNestsPredefinedEntryPathCoordinates() {
     nest3EntryPoints.push_back(lastPoint3);
     nest4EntryPoints.push_back(lastPoint4);
 
-    for(int i = 0; i < 9; i++) {
+    for(int i = 0; i < 7; i++) {
         lastPoint1.Set(lastPoint1.GetX(), lastPoint1.GetY() + 0.05f, 0.0f);
         nest1EntryPoints.push_back(lastPoint1);
     }
 
-    for(int i = 0; i < 8; i++) {
+    for(int i = 0; i < 7; i++) {
         lastPoint1.Set(lastPoint1.GetX()+ 0.05f, lastPoint1.GetY(), 0.0f);
         nest1EntryPoints.push_back(lastPoint1);
     }
 
-    for(int i = 0; i < 5; i++) {
+    for(int i = 0; i < 4; i++) {
         lastPoint2.Set(lastPoint2.GetX() - 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
         nest2EntryPoints.push_back(lastPoint2);
     }
@@ -296,37 +297,37 @@ void CPFA_loop_functions::SetNestsPredefinedEntryPathCoordinates() {
         nest2EntryPoints.push_back(lastPoint2);
     }
 
-    for(int i = 0; i < 7; i++) {
+    for(int i = 0; i < 5; i++) {
         lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY(), 0.0f);
         nest2EntryPoints.push_back(lastPoint2);
     }
 
-    for(int i = 0; i < 8; i++) {
+    for(int i = 0; i < 7; i++) {
         lastPoint3.Set(lastPoint3.GetX() - 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
         nest3EntryPoints.push_back(lastPoint3);
     }
 
-    for(int i = 0; i < 13; i++) {
+    for(int i = 0; i < 12; i++) {
         lastPoint3.Set(lastPoint3.GetX(), lastPoint3.GetY() + 0.05f, 0.0f);
         nest3EntryPoints.push_back(lastPoint3);
     }
 
-    for(int i = 0; i < 16; i++) {
+    for(int i = 0; i < 14; i++) {
         lastPoint3.Set(lastPoint3.GetX() + 0.05f, lastPoint3.GetY(), 0.0f);
         nest3EntryPoints.push_back(lastPoint3);
     }
 
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < 2; i++) {
         lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
         nest4EntryPoints.push_back(lastPoint4);
     }
 
-    for(int i = 0; i < 16; i++) {
+    for(int i = 0; i < 15; i++) {
         lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
         nest4EntryPoints.push_back(lastPoint4);
     }
 
-    for(int i = 0; i < 8; i++) {
+    for(int i = 0; i < 9; i++) {
         lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
         nest4EntryPoints.push_back(lastPoint4);
     }
@@ -395,29 +396,24 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
 	SpiralPathCoordinates.clear();
 	SpiralPathCoordinatesForController.clear();
 	
-    
-    const Real fRedCircleRadius = NestRadius * RedCircleRadiusMultiplier;
+    const Real fRedCircleRadius = RedCircleRadius;
     const CVector2 center = RedCirclePosition;
 
-    // Entry point (bottom of the outer circle)
     CVector3 entryPoint(center.GetX(), 
-                       center.GetY() + fRedCircleRadius,
-                       0.1f);
+                    center.GetY() + fRedCircleRadius,
+                    0.1f);
                        
-    LOG << "entryPoint: " << entryPoint.GetX() << ", " << entryPoint.GetY() << std::endl;
     SpiralPathCoordinates.push_back(entryPoint);
     
     // Specific point inside the red circle (you can adjust this)
     CVector3 startPoint(center.GetX(),  // 30% radius to the right
                        center.GetY() + (fRedCircleRadius * 0.9f),   // 40% radius down
                        0.1f);
-
-    LOG << "startPoint: " << startPoint.GetX() << ", " << startPoint.GetY() << std::endl;
     
     SpiralPathCoordinates.push_back(startPoint);
     
     const UInt32 unNumPoints = 270;
-    Real arc_degree = 302.0f;
+    Real arc_degree = 306.0f;
    
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
         // Real radian = i * (M_PI / 180.0f);
@@ -444,8 +440,8 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
         // Real radian = i * (M_PI / 180.0f);
         Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
-        CVector3 point((fRedCircleRadius*0.75f) * Cos(CRadians(-radian)),
-                       (fRedCircleRadius*0.75f) * Sin(CRadians(-radian)),
+        CVector3 point((fRedCircleRadius*0.8f) * Cos(CRadians(-radian)),
+                       (fRedCircleRadius*0.8f) * Sin(CRadians(-radian)),
                        0.1f);
         // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         SpiralPathCoordinates.push_back(point);
@@ -461,13 +457,50 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
 
     // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
 
-    arc_degree -= 3;
+    // arc_degree -= 3;
+    for(UInt32 i = 0; i <= unNumPoints; ++i) {
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+        CVector3 point((fRedCircleRadius*0.7f) * Sin(CRadians(-radian)),
+                       (fRedCircleRadius*0.7f) * Cos(CRadians(-radian)),
+                       0.1f);
+        // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+        SpiralPathCoordinates.push_back(point);
+    }
+
+    lastPoint = SpiralPathCoordinates.back();
+    anotherPoint.Set(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
+    SpiralPathCoordinates.push_back(anotherPoint);
+
+    // arc_degree = 125.0f;
+    for(UInt32 i = 0; i <= unNumPoints; ++i) {
+        // Real radian = i * (M_PI / 180.0f);
+        Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+        CVector3 point((fRedCircleRadius*0.6f) * Cos(CRadians(-radian)),
+                       (fRedCircleRadius*0.6f) * Sin(CRadians(-radian)),
+                       0.1f);
+        // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+        SpiralPathCoordinates.push_back(point);
+    }
+
+
+    lastPoint = SpiralPathCoordinates.back();
+    anotherPoint.Set(
+        lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+        lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+        0.1f
+    );
+    SpiralPathCoordinates.push_back(anotherPoint);
 
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
         // Real radian = i * (M_PI / 180.0f);
         Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
-        CVector3 point((fRedCircleRadius*0.6f) * Sin(CRadians(-radian)),
-                       (fRedCircleRadius*0.6f) * Cos(CRadians(-radian)),
+        CVector3 point((fRedCircleRadius*0.5f) * Sin(CRadians(-radian)),
+                       (fRedCircleRadius*0.5f) * Cos(CRadians(-radian)),
                        0.1f);
         // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         SpiralPathCoordinates.push_back(point);
@@ -485,12 +518,108 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
     for(UInt32 i = 0; i <= unNumPoints; ++i) {
         // Real radian = i * (M_PI / 180.0f);
         Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
-        CVector3 point((fRedCircleRadius*0.45f) * Cos(CRadians(-radian)),
-                       (fRedCircleRadius*0.45f) * Sin(CRadians(-radian)),
+        CVector3 point((fRedCircleRadius*0.4f) * Cos(CRadians(-radian)),
+                       (fRedCircleRadius*0.4f) * Sin(CRadians(-radian)),
                        0.1f);
         // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
         SpiralPathCoordinates.push_back(point);
     }
+    
+    // const Real fRedCircleRadius = NestRadius * RedCircleRadiusMultiplier;
+    // const CVector2 center = RedCirclePosition;
+
+    // // Entry point (bottom of the outer circle)
+    // CVector3 entryPoint(center.GetX(), 
+    //                    center.GetY() + fRedCircleRadius,
+    //                    0.1f);
+                       
+    // LOG << "entryPoint: " << entryPoint.GetX() << ", " << entryPoint.GetY() << std::endl;
+    // SpiralPathCoordinates.push_back(entryPoint);
+    
+    // // Specific point inside the red circle (you can adjust this)
+    // CVector3 startPoint(center.GetX(),  // 30% radius to the right
+    //                    center.GetY() + (fRedCircleRadius * 0.9f),   // 40% radius down
+    //                    0.1f);
+
+    // LOG << "startPoint: " << startPoint.GetX() << ", " << startPoint.GetY() << std::endl;
+    
+    // SpiralPathCoordinates.push_back(startPoint);
+    
+    // const UInt32 unNumPoints = 270;
+    // Real arc_degree = 302.0f;
+   
+    // for(UInt32 i = 0; i <= unNumPoints; ++i) {
+    //     // Real radian = i * (M_PI / 180.0f);
+    //     Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+    //     CVector3 point((fRedCircleRadius*0.9f) * Sin(CRadians(-radian)),
+    //                    (fRedCircleRadius*0.9f) * Cos(CRadians(-radian)),
+    //                    0.1f);
+    //     // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+    //     SpiralPathCoordinates.push_back(point);
+    // }
+
+    // float t = 0.15f; // 20% of the distance to the center
+    // CVector3 lastPoint = SpiralPathCoordinates.back();
+    // CVector3 anotherPoint(
+    //     lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+    //     lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+    //     0.1f
+    // );
+
+    // SpiralPathCoordinates.push_back(anotherPoint);
+
+    // // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
+
+    // for(UInt32 i = 0; i <= unNumPoints; ++i) {
+    //     // Real radian = i * (M_PI / 180.0f);
+    //     Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+    //     CVector3 point((fRedCircleRadius*0.75f) * Cos(CRadians(-radian)),
+    //                    (fRedCircleRadius*0.75f) * Sin(CRadians(-radian)),
+    //                    0.1f);
+    //     // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+    //     SpiralPathCoordinates.push_back(point);
+    // }
+
+    // lastPoint = SpiralPathCoordinates.back();
+    // anotherPoint.Set(
+    //     lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+    //     lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+    //     0.1f
+    // );
+    // SpiralPathCoordinates.push_back(anotherPoint);
+
+    // // // LOG << "anotherPoint: " << anotherPoint.GetX() << ", " << anotherPoint.GetY() << std::endl;
+
+    // arc_degree -= 3;
+
+    // for(UInt32 i = 0; i <= unNumPoints; ++i) {
+    //     // Real radian = i * (M_PI / 180.0f);
+    //     Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+    //     CVector3 point((fRedCircleRadius*0.6f) * Sin(CRadians(-radian)),
+    //                    (fRedCircleRadius*0.6f) * Cos(CRadians(-radian)),
+    //                    0.1f);
+    //     // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+    //     SpiralPathCoordinates.push_back(point);
+    // }
+
+    // lastPoint = SpiralPathCoordinates.back();
+    // anotherPoint.Set(
+    //     lastPoint.GetX() + t * (center.GetX() - lastPoint.GetX()),
+    //     lastPoint.GetY() + t * (center.GetY() - lastPoint.GetY()),
+    //     0.1f
+    // );
+    // SpiralPathCoordinates.push_back(anotherPoint);
+
+    // arc_degree = 125.0f;
+    // for(UInt32 i = 0; i <= unNumPoints; ++i) {
+    //     // Real radian = i * (M_PI / 180.0f);
+    //     Real radian = i * (arc_degree * M_PI / (180.0f *unNumPoints));
+    //     CVector3 point((fRedCircleRadius*0.45f) * Cos(CRadians(-radian)),
+    //                    (fRedCircleRadius*0.45f) * Sin(CRadians(-radian)),
+    //                    0.1f);
+    //     // LOG << "point at degree: " << i << " is " << point.GetX() << ", " << point.GetY() << std::endl;
+    //     SpiralPathCoordinates.push_back(point);
+    // }
 
     SetNestsPredefinedEntryPathCoordinates();
     SetNestsPredefinedExitPathCoordinates();
