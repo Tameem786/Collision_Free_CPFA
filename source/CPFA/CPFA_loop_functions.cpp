@@ -75,7 +75,7 @@ void CPFA_loop_functions::RemoveRobotFromPathQueueToNest(int nestIndex, const st
             if (queue.empty()) {
                 pathAvailableToNest[nestIndex] = true;  // Path is now free
             }
-            LOG << "Robot " << robotId << " removed from path queue " << nestIndex << std::endl;
+            // LOG << "Robot " << robotId << " removed from path queue " << nestIndex << std::endl;
         }
     }
 }
@@ -98,8 +98,6 @@ void CPFA_loop_functions::AddRobotToPathQueue(const std::string& robotId) {
     auto it = std::find(pathQueue.begin(), pathQueue.end(), robotId);
     if (it == pathQueue.end()) {
         pathQueue.push_back(robotId);
-        argos::LOG << "Robot " << robotId << " added to path queue. Queue size: " 
-                   << pathQueue.size() << std::endl;
     } else {
         argos::LOG << "Robot " << robotId << " already in path queue." << std::endl;
     }
@@ -109,8 +107,6 @@ void CPFA_loop_functions::RemoveRobotFromPathQueue(const std::string& robotId) {
     auto it = std::find(pathQueue.begin(), pathQueue.end(), robotId);
     if (it != pathQueue.end()) {
         pathQueue.erase(it);
-        argos::LOG << "Robot " << robotId << " removed from path queue. Queue size: " 
-                   << pathQueue.size() << std::endl;
     } else {
         argos::LOG << "Warning: Tried to remove robot " << robotId 
                    << " from path queue, but it wasn't found." << std::endl;
@@ -769,11 +765,14 @@ void CPFA_loop_functions::PostStep() {
 bool CPFA_loop_functions::IsExperimentFinished() {
 	bool isFinished = false;
 
-	if(FoodList.size() == 0 || GetSpace().GetSimulationClock() >= MaxSimTime) {
+	// if(FoodList.size() == 0 || GetSpace().GetSimulationClock() >= MaxSimTime) {
+	// 	isFinished = true;
+	// }
+    if(FoodList.size() == 0) {
 		isFinished = true;
 	}
     //set to collected 88% food and then stop
-    if(score >= NumDistributedFood){
+    if(score >= (NumDistributedFood * 0.8)){
 		isFinished = true;
 		}
          
