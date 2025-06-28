@@ -855,7 +855,7 @@ bool CPFA_controller::CollisionDetection() {
 	bool isCollisionDetected = false;
 	
 	// this is the normal collision logic where a robot determines a where it is colliding with another robot and the turn it must take.
-    if (GetStatus() == "FOLLOWING_ENTRY_PATH") {
+    if (GetStatus() == "FOLLOWING_ENTRY_PATH" || GetStatus() == "EXITING") {
         if (GoStraightAngleRangeInDegreesInRegion.WithinMinBoundIncludedMaxBoundIncluded(collisionAngle)
             && collisionVector.Length() > 0.0) {
 			Stop();
@@ -1022,11 +1022,6 @@ void CPFA_controller::FollowingEntryPath() {
 		if(IsInTheNest(LoopFunctions->NestPositions[selectedNestIndex])) {
 
 			Wait(25);
-
-			// argos::LOG << GetId() << " Reached nest. Dropping food and exiting." << std::endl;
-			
-			// Remove this robot from the path queue
-			// LoopFunctions->RemoveRobotFromPathQueueToNest(selectedNestIndex, GetId());
 
 			isFollowingNestPredefinedExitPath = true;
 			predefinedNestExitPathIndex = 0;
@@ -1627,6 +1622,7 @@ string CPFA_controller::GetStatus(){//qilu 10/22
     else if (CPFA_state ==SEARCHING)return "SEARCHING";
     else if (CPFA_state == RETURNING)return "RETURNING";
     else if (CPFA_state == SURVEYING) return "SURVEYING";
+	else if (CPFA_state == EXITING) return "EXITING";
 	else if (CPFA_state == FOLLOWING_ENTRY_PATH) return "FOLLOWING_ENTRY_PATH";
     //else if (MPFA_state == INACTIVE) return "INACTIVE";
     else return "SHUTDOWN";
