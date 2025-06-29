@@ -741,9 +741,9 @@ void CPFA_loop_functions::Reset() {
 void CPFA_loop_functions::PreStep() {
     SimTime++;
     curr_time_in_minutes = getSimTimeInSeconds()/60.0;
-    if(SimTime % 19200 == 0) { // 19200 == 10 (curr_time_in_mins)
-        printf("%f, %f, %d\n", score, curr_time_in_minutes, SimTime);
-    }
+    // if(SimTime % 19200 == 0) { // 19200 == 10 (curr_time_in_mins)
+    //     printf("%f, %f, %d\n", score, curr_time_in_minutes, SimTime);
+    // }
     if(curr_time_in_minutes - last_time_in_minutes==1){
 		      
         ForageList.push_back(currNumCollectedFood - lastNumCollectedFood);
@@ -781,10 +781,10 @@ bool CPFA_loop_functions::IsExperimentFinished() {
 		isFinished = true;
 	}
     //set to collected 88% food and then stop
-    if(score >= (NumDistributedFood * 0.8)){
-        printf("80% Resources Are Collected! Stop.");
-		isFinished = true;
-		}
+    if(score >= (NumDistributedFood * 0.9)){
+        printf("90% Resources Are Collected! Took %f minutes.\n", curr_time_in_minutes/60.0);
+        isFinished = true;
+	}
          
          
     
@@ -805,7 +805,7 @@ bool CPFA_loop_functions::IsExperimentFinished() {
 
 void CPFA_loop_functions::PostExperiment() {
 	  
-     printf("%f, %f, %lu\n", score, getSimTimeInSeconds(), RandomSeed);
+     printf("Resource Collected: %f, Time Took: %f minutes, Random Seed: %lu\n", score, getSimTimeInSeconds()/3600, RandomSeed);
        
                   
     if (PrintFinalScore == 1) {
