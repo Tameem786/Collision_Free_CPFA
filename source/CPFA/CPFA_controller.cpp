@@ -394,12 +394,12 @@ void CPFA_controller::Searching() {
         }
 
         // Check if current target is inside red circle
-		// argos::Real distanceToCenter = (GetTarget() - LoopFunctions->RedCirclePosition).Length();
-		// if(distanceToCenter <= redCircleRadius) {
-		// 	// Target is inside red circle, set a new random search location outside
-		// 	SetRandomSearchLocation(false);
-		// 	return;
-		// }
+		argos::Real distanceToCenter = (GetTarget() - LoopFunctions->RedCirclePosition).Length();
+		if(distanceToCenter <= redCircleRadius) {
+			// Target is inside red circle, set a new random search location outside
+			SetRandomSearchLocation(false);
+			return;
+		}
      
         // If we reached our target search location, set a new one. The 
         // new search location calculation is different based on whether
@@ -693,27 +693,20 @@ void CPFA_controller::Returning() {
 			// Check if we're close enough to entry point
 			argos::Real distanceToEntry = (currentPos - entryPoint).Length();
 			
-			if(distanceToEntry < 0.2) { // Reached entry point area
+			if(distanceToEntry < 0.25) { // Reached entry point area
+
+				int index = RNG->Uniform(argos::CRange<argos::UInt32>(0, 10));
 				
-				// Check if we can enter the predefined path (queue management)
-				if(CanEnterPredefinedPath()) {
-					// Add this robot to the queue and start following predefined path
-					CPFA_state = FOLLOWING_ENTRY_PATH;
-					LoopFunctions->AddRobotToPathQueue(GetId());
-					isFollowingPredefinedPath = true;
-					predefinedPathIndex = 0;
-					isFollowingCircleBoundary = false;
-					
-					// Set first waypoint of predefined path
-					SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
-					// argos::LOG << GetId() << " Entering predefined path. First waypoint: " 
-					// 		   << predefinedPath[predefinedPathIndex].GetX() << ", " 
-					// 		   << predefinedPath[predefinedPathIndex].GetY() << std::endl;
-				} else {
-					// Wait in queue - stay at entry point
-					SetTarget(entryPoint);
-					// argos::LOG << GetId() << " Waiting in queue at entry point." << std::endl;
-				}
+				// Add this robot to the queue and start following predefined path
+				CPFA_state = FOLLOWING_ENTRY_PATH;
+				// LoopFunctions->AddRobotToPathQueue(GetId());
+				isFollowingPredefinedPath = true;
+				predefinedPathIndex = index;
+				isFollowingCircleBoundary = false;
+				
+				// Set first waypoint of predefined path
+				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+
 			} else {
 				// Continue following boundary FROM OUTSIDE
 				argos::Real angularStep = 0.1; // Step size for movement along circle
@@ -758,7 +751,7 @@ void CPFA_controller::FollowingEntryPath() {
 
 			if(availablePathToNest != -1) {
 				selectedNestIndex = availablePathToNest;
-				LoopFunctions->RemoveRobotFromPathQueue(GetId());
+				// LoopFunctions->RemoveRobotFromPathQueue(GetId());
 				LoopFunctions->AddRobotToPathQueueToNest(selectedNestIndex, GetId());
 
 				predefinedNestEntryPathIndex = 0;
@@ -784,7 +777,7 @@ void CPFA_controller::FollowingEntryPath() {
 				isWaitingForNest = true;
 				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex-1]);
 				SetIsHeadingToNest(false);
-				argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
+				// argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
 			}
 			
 		} else {
@@ -1256,36 +1249,36 @@ void CPFA_controller::SetHoldingFood() {
                 searchingTime+=SimulationTick()-startTime;
                 startTime = SimulationTick();
 
-                // distribute a new food - ensure it's outside the red circle
-                argos::CVector2 placementPosition;
-                bool validPosition = false;
+                // // distribute a new food - ensure it's outside the red circle
+                // argos::CVector2 placementPosition;
+                // bool validPosition = false;
                 
-                // Calculate red circle radius if not already set
-                if(redCircleRadius == 0.0) {
-                    redCircleRadius = LoopFunctions->RedCircleRadius;
-                }
+                // // Calculate red circle radius if not already set
+                // if(redCircleRadius == 0.0) {
+                //     redCircleRadius = LoopFunctions->RedCircleRadius;
+                // }
 
-                while(!validPosition) {
-                    placementPosition.Set(RNG->Uniform(ForageRangeX), RNG->Uniform(ForageRangeY));
+                // while(!validPosition) {
+                //     placementPosition.Set(RNG->Uniform(ForageRangeX), RNG->Uniform(ForageRangeY));
                     
-                    // Check if position is valid (outside red circle and not out of bounds)
-                    if(!LoopFunctions->IsOutOfBounds(placementPosition, 1, 1)) {
-						for (const auto& nestPos : LoopFunctions->NestPositions) {
-							argos::Real distanceFromCenter = (placementPosition - nestPos).Length();
-							if (distanceFromCenter > redCircleRadius) {
-								validPosition = true;
-							}
-						}
-                        // argos::Real distanceFromCenter = (placementPosition - LoopFunctions->NestPosition).Length();
-                        // if(distanceFromCenter > redCircleRadius) {
-                        //     validPosition = true;
-                        // }
-                    }
-                }
+                //     // Check if position is valid (outside red circle and not out of bounds)
+                //     if(!LoopFunctions->IsOutOfBounds(placementPosition, 1, 1)) {
+				// 		for (const auto& nestPos : LoopFunctions->NestPositions) {
+				// 			argos::Real distanceFromCenter = (placementPosition - nestPos).Length();
+				// 			if (distanceFromCenter > redCircleRadius) {
+				// 				validPosition = true;
+				// 			}
+				// 		}
+                //         // argos::Real distanceFromCenter = (placementPosition - LoopFunctions->NestPosition).Length();
+                //         // if(distanceFromCenter > redCircleRadius) {
+                //         //     validPosition = true;
+                //         // }
+                //     }
+                // }
 
-                newFoodList.push_back(placementPosition);
-                newFoodColoringList.push_back(LoopFunctions->FoodColoringList[i]);
-                LoopFunctions->increaseNumDistributedFoodByOne();
+                // newFoodList.push_back(placementPosition);
+                // newFoodColoringList.push_back(LoopFunctions->FoodColoringList[i]);
+                // LoopFunctions->increaseNumDistributedFoodByOne();
                 break;
             } else {
                 //Return this unfound-food position to the list
