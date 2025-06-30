@@ -741,9 +741,9 @@ void CPFA_loop_functions::Reset() {
 void CPFA_loop_functions::PreStep() {
     SimTime++;
     curr_time_in_minutes = getSimTimeInSeconds()/60.0;
-    // if(SimTime % 19200 == 0) { // 19200 == 10 (curr_time_in_mins)
-    //     printf("%f, %f, %d\n", score, curr_time_in_minutes, SimTime);
-    // }
+    if(SimTime % 19200 == 0) { // 19200 == 10 (curr_time_in_mins)
+        printf("%f, %f, %d\n", score, curr_time_in_minutes, SimTime);
+    }
     if(curr_time_in_minutes - last_time_in_minutes==1){
 		      
         ForageList.push_back(currNumCollectedFood - lastNumCollectedFood);
@@ -781,10 +781,14 @@ bool CPFA_loop_functions::IsExperimentFinished() {
 		isFinished = true;
 	}
     //set to collected 88% food and then stop
-    if(score >= (NumDistributedFood * 0.9)){
-        printf("90% Resources Are Collected! Took %f minutes.\n", curr_time_in_minutes/60.0);
+    // if(score >= (NumDistributedFood * 0.9)){
+    //     printf("90% Resources Are Collected! Took %f minutes.\n", curr_time_in_minutes/60.0);
+    //     isFinished = true;
+	// }
+
+    if(curr_time_in_minutes/60.0 >= 15.0) {
         isFinished = true;
-	}
+    }
          
          
     
@@ -1224,14 +1228,13 @@ void CPFA_loop_functions::ConfigureFromGenome(Real* g)
 
 bool CPFA_loop_functions::IsNearRedCircle(const argos::CVector2& p) {
     // The red circle radius is 5 times the nest radius
-    argos::Real redCircleRadius = RedCircleRadius;
     argos::Real distance = (p - RedCirclePosition).Length();
-    
     // Check if the position is near the red circle (within a small tolerance)
-    argos::Real tolerance = 0.15; // 15cm tolerance
+    argos::Real tolerance=0.15f;
+
     // return std::abs(distance - redCircleRadius) < tolerance;
-	return (distance >= (redCircleRadius - tolerance) && 
-            distance <= (redCircleRadius + tolerance));
+	return (distance >= (RedCircleRadius - tolerance) && 
+            distance <= (RedCircleRadius + tolerance));
 }
 
 // Check if robot is inside the red circle

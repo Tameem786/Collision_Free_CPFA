@@ -1,0 +1,30 @@
+=== Run 1 (Seed: 123456) ===
+Resource Collected: 304.000000, Time Took: 0.957222 minutes, Random Seed: 123456
+
+=== Run 2 (Seed: 789012) ===
+Resource Collected: 307.000000, Time Took: 1.025972 minutes, Random Seed: 789012
+
+=== Run 3 (Seed: 345678) ===
+Resource Collected: 300.000000, Time Took: 0.998750 minutes, Random Seed: 345678
+
+=== Run 4 (Seed: 901234) ===
+Resource Collected: 307.000000, Time Took: 0.860833 minutes, Random Seed: 901234
+
+=== Run 5 (Seed: 567890) ===
+Resource Collected: 314.000000, Time Took: 0.986667 minutes, Random Seed: 567890
+
+=== Run 6 (Seed: 135791) ===
+Resource Collected: 51.000000, Time Took: 15.000000 minutes, Random Seed: 135791
+
+=== Run 7 (Seed: 246802) ===
+Resource Collected: 307.000000, Time Took: 0.956389 minutes, Random Seed: 246802
+
+=== Run 8 (Seed: 864209) ===
+Resource Collected: 206.000000, Time Took: 15.000000 minutes, Random Seed: 864209
+
+=== Run 9 (Seed: 751936) ===
+Resource Collected: 302.000000, Time Took: 0.872917 minutes, Random Seed: 751936
+
+=== Run 10 (Seed: 428573) ===
+Resource Collected: 311.000000, Time Took: 0.924028 minutes, Random Seed: 428573
+

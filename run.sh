@@ -1,49 +1,62 @@
 #!/bin/bash
 
-# ARGoS Multi-Run Script
-# Runs the configuration file 10 times with different experiment lengths
+# ARGoS Multiple Run Script
+# This script runs the simulation 10 times with different random seeds
+# and extracts the "Resource Collected:" lines from the output
 
 CONFIG_FILE="experiments/Clustered_CPFA_r64_tag512_16by16.xml"
-ORIGINAL_LENGTH=900
+OUTPUT_FILE="simulation_results_48_robots.txt"
+TEMP_CONFIG="temp.xml"
 
-# Check if config file exists
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "Error: Configuration file '$CONFIG_FILE' not found!"
-    exit 1
-fi
+# Array of random seeds to use
+SEEDS=(123456 789012 345678 901234 567890 135791 246802 864209 751936 428573)
 
-# Create a backup of the original file
-cp "$CONFIG_FILE" "${CONFIG_FILE}.backup"
+# Clear previous results
+> "$OUTPUT_FILE"
 
-echo "Starting 10 runs with different experiment lengths..."
-echo "Original length: $ORIGINAL_LENGTH"
-echo "=================================="
+echo "Starting 10 simulation runs with different random seeds..."
+echo "Results will be saved to: $OUTPUT_FILE"
+echo ""
 
-for i in {1..10}; do
-    # Generate a new experiment length
-    NEW_LENGTH=$((ORIGINAL_LENGTH + (100 * i)))
+for i in {0..9}; do
+    SEED=${SEEDS[$i]}
+    RUN_NUMBER=$((i + 1))
     
-    echo "Run $i: Using experiment length $NEW_LENGTH"
+    echo "Run $RUN_NUMBER: Using random seed $SEED"
     
-    # Replace the length in the config file
-    sed -i "s/length=\"[0-9]*\"/length=\"$NEW_LENGTH\"/" "$CONFIG_FILE"
+    # Create temporary config file with new random seed
+    sed "s/random_seed=\"[0-9]*\"/random_seed=\"$SEED\"/" "$CONFIG_FILE" > "$TEMP_CONFIG"
     
-    # Run ARGoS with the modified configuration
-    echo "  Executing: argos3 -c $CONFIG_FILE"
-    argos3 -c "$CONFIG_FILE"
+    # Run ARGoS simulation and capture output
+    echo "=== Run $RUN_NUMBER (Seed: $SEED) ===" >> "$OUTPUT_FILE"
     
-    # Check if the run was successful
-    if [ $? -eq 0 ]; then
-        echo "  Run $i completed successfully"
-    else
-        echo "  Run $i failed!"
-    fi
+    # Run the simulation and filter for "Resource Collected:" lines
+    argos3 -c "$TEMP_CONFIG" 2>&1 | grep "Resource Collected:" | tee -a "$OUTPUT_FILE"
     
-    echo "  --------------------------------"
+    echo "" >> "$OUTPUT_FILE"
+    
+    echo "Run $RUN_NUMBER completed"
+    echo ""
 done
 
-# Restore the original configuration file
-mv "${CONFIG_FILE}.backup" "$CONFIG_FILE"
+# Clean up temporary file
+rm -f "$TEMP_CONFIG"
 
 echo "All runs completed!"
-echo "Original configuration file restored."
+echo "Results summary:"
+echo "=================="
+
+# Extract and display just the Resource Collected values
+echo "Run | Seed     | Resources Collected"
+echo "----|----------|-------------------"
+
+run_num=1
+for seed in "${SEEDS[@]}"; do
+    # Extract the resource count for this run
+    resource_count=$(grep -A1 "Run $run_num (Seed: $seed)" "$OUTPUT_FILE" | grep "Resource Collected:" | awk '{print $NF}')
+    printf "%2d  | %8s | %s\n" "$run_num" "$seed" "$resource_count"
+    ((run_num++))
+done
+
+echo ""
+echo "Detailed results saved in: $OUTPUT_FILE"

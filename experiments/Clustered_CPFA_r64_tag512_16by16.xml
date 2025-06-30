@@ -4,7 +4,7 @@
   <!-- * General configuration * -->
   <!-- ************************* -->
   <framework>
-    <system threads="0"/>
+    <system threads="1"/>
     <experiment length="0" random_seed="513568" ticks_per_second="32"/>
   </framework>
 
@@ -89,7 +89,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     
    <!--Distribute foraging robots --> 
     <distribute>
-      <position center="3.0, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
+      <position center="3.0, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
       <entity max_trials="100" quantity="12">
         <foot-bot id="F0-">
@@ -99,7 +99,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     </distribute>
 
     <distribute>
-      <position center="0.0, 3.0, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
+      <position center="0.0, 3.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
       <entity max_trials="100" quantity="12">
         <foot-bot id="F1-">
@@ -109,7 +109,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     </distribute>
 
     <distribute>
-      <position center="-3.0, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
+      <position center="-3.0, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
       <entity max_trials="100" quantity="12">
         <foot-bot id="F2-">
@@ -119,7 +119,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     </distribute>
 
     <distribute>
-      <position center="0.0, -3.0, 0.0" distances="0.3, 0.3, 0.0" layout="4, 3, 1" method="grid"/>
+      <position center="0.0, -3.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
       <entity max_trials="100" quantity="12">
         <foot-bot id="F3-">
