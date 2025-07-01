@@ -722,19 +722,24 @@ void CPFA_controller::Returning() {
 
 
 		//Version 2.0: Tameem
-		if(isHoldingFood && !isReachedFifthInnerCircle && !isNearForbiddenArea) {
+		if(isHoldingFood && !isReachedFifthInnerCircle) {
 
 			if(LoopFunctions->IsNearRedCircle(GetPosition()) || LoopFunctions->IsInsideRedCircle(GetPosition())) {
 
-				if(LoopFunctions->IsNearForbiddenArea(GetPosition()).isHit && !isFollowingAvoidance) {
+				if(LoopFunctions->IsNearForbiddenArea(GetPosition()).isHit) {
 					// LOG << GetId() << " is near forbidden area, start following" << std::endl;
-					isNearForbiddenArea = true;
-					isFollowingAvoidance = true;
-					CVector2 entryPoint(LoopFunctions->RedCirclePosition.GetX(), 
-						LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->RedCircleRadius
-						);
-					SetTarget(entryPoint);
+					// isNearForbiddenArea = true;
+					// isFollowingAvoidance = true;
+					// CVector2 entryPoint(LoopFunctions->RedCirclePosition.GetX(), 
+					// 	LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->RedCircleRadius
+					// 	);
+					// SetTarget(entryPoint);
+					// SetIsHeadingToNest(false);
+					Real predefinedPathIndex = RNG->Uniform(CRange<UInt32>(5, 20));
+					SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
 					SetIsHeadingToNest(false);
+					CPFA_state = FOLLOWING_ENTRY_PATH;
+					return;
 				}
 				
 				if(LoopFunctions->IsNearFifthInnerCircle(GetPosition()).isHit) {
@@ -775,12 +780,11 @@ void CPFA_controller::Returning() {
 						} else if(isReachedThirdInnerCircle) {
 							predefinedPathIndex = predefinedPathIndexOnSecondInnerCircle;
 						} else if(isReachedSecondInnerCircle || isReachedFirstInnerCircle) {
-							
 							predefinedPathIndex = predefinedPathIndexOnFirstInnerCircle;
 						} else {
 							return;
 						}
-					
+
 						SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
 						SetIsHeadingToNest(false);
 						isFollowingOuterCircle = true;
@@ -982,7 +986,7 @@ void CPFA_controller::FollowingEntryPath() {
 				isWaitingForNest = true;
 				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex-1]);
 				SetIsHeadingToNest(false);
-				argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
+				// argos::LOG << GetId() << " No available path to nest. Waiting in queue." << std::endl;
 			}
 			
 		} else {
@@ -1405,38 +1409,7 @@ void CPFA_controller::SetHoldingFood() {
                 j = i + 1;
                 searchingTime+=SimulationTick()-startTime;
                 startTime = SimulationTick();
-
-                // distribute a new food - ensure it's outside the red circle
-                argos::CVector2 placementPosition;
-                bool validPosition = false;
-                
-                // Calculate red circle radius if not already set
-                if(redCircleRadius == 0.0) {
-                    redCircleRadius = LoopFunctions->RedCircleRadius;
-                }
-
-                while(!validPosition) {
-                    placementPosition.Set(RNG->Uniform(ForageRangeX), RNG->Uniform(ForageRangeY));
-                    
-                    // Check if position is valid (outside red circle and not out of bounds)
-                    if(!LoopFunctions->IsOutOfBounds(placementPosition, 1, 1)) {
-						for (const auto& nestPos : LoopFunctions->NestPositions) {
-							argos::Real distanceFromCenter = (placementPosition - nestPos).Length();
-							if (distanceFromCenter > redCircleRadius) {
-								validPosition = true;
-							}
-						}
-                        // argos::Real distanceFromCenter = (placementPosition - LoopFunctions->NestPosition).Length();
-                        // if(distanceFromCenter > redCircleRadius) {
-                        //     validPosition = true;
-                        // }
-                    }
-                }
-
-                newFoodList.push_back(placementPosition);
-                newFoodColoringList.push_back(LoopFunctions->FoodColoringList[i]);
-                LoopFunctions->increaseNumDistributedFoodByOne();
-                break;
+				break;
             } else {
                 //Return this unfound-food position to the list
                 newFoodList.push_back(LoopFunctions->FoodList[i]);
