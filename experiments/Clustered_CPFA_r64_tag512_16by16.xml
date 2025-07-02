@@ -146,7 +146,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
   <!-- ****************** -->
 
 
-  <!-- <visualization>
+  <visualization>
 
     <qt-opengl>
       <camera>
@@ -157,6 +157,6 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
       <user_functions label="CPFA_qt_user_functions"/>
     </qt-opengl>
 
-  </visualization> -->
+  </visualization>
 -->
 </argos-configuration>
