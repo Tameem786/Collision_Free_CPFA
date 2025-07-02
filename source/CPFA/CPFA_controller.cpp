@@ -755,19 +755,19 @@ void CPFA_controller::Returning() {
 					
 				} else {
 
-					if(LoopFunctions->IsNearFirstInnerCircle(GetPosition()).isHit) {
+					if(!isReachedFirstInnerCircle && LoopFunctions->IsNearFirstInnerCircle(GetPosition()).isHit) {
 						predefinedPathIndexOnFirstInnerCircle = LoopFunctions->IsNearFirstInnerCircle(GetPosition()).positionIndex;
 						isReachedFirstInnerCircle = true;
 					}
-					if(LoopFunctions->IsNearSecondInnerCircle(GetPosition()).isHit) {
+					if(!isReachedSecondInnerCircle && LoopFunctions->IsNearSecondInnerCircle(GetPosition()).isHit) {
 						predefinedPathIndexOnSecondInnerCircle = LoopFunctions->IsNearSecondInnerCircle(GetPosition()).positionIndex;
 						isReachedSecondInnerCircle = true;
 					}
-					if(LoopFunctions->IsNearThirdInnerCircle(GetPosition()).isHit) {
+					if(!isReachedThirdInnerCircle && LoopFunctions->IsNearThirdInnerCircle(GetPosition()).isHit) {
 						predefinedPathIndexOnThirdInnerCircle = LoopFunctions->IsNearThirdInnerCircle(GetPosition()).positionIndex;
 						isReachedThirdInnerCircle = true;
 					}
-					if(LoopFunctions->IsNearFourthInnerCircle(GetPosition()).isHit) {
+					if(!isReachedFourthInnerCircle && LoopFunctions->IsNearFourthInnerCircle(GetPosition()).isHit) {
 						predefinedPathIndexOnFourthInnerCircle = LoopFunctions->IsNearFourthInnerCircle(GetPosition()).positionIndex;
 						isReachedFourthInnerCircle = true;
 					}
@@ -801,12 +801,6 @@ void CPFA_controller::Returning() {
 					//fRedCircleRadius * 0.7f - Third Inner Circle
 					//fRedCircleRadius * 0.6f - Fourth Inner Circle
 					//fRedCircleRadius * 0.5f - Fourth Inner Circle
-
-					// Real radius =  redCircleRadius - 0.2;
-					// radius -= 0.2;
-					// radius -= 0.2;
-					// radius -= 0.2;
-					// radius -= 0.2;
 					
 					// Set target to a point slightly outside the red circle (safe distance)
 					argos::Real safeDistance = (redCircleRadius * 0.5f) + 0.1;
@@ -819,11 +813,6 @@ void CPFA_controller::Returning() {
 				// Robot is not at last inner circle yet, head towards it
 				argos::CVector2 currentPos = GetPosition();
 				argos::CVector2 directionToCenter = (LoopFunctions->RedCirclePosition - currentPos).Normalize();
-				
-				//fRedCircleRadius * 0.9f - First Inner Circle
-				//fRedCircleRadius * 0.75f - Second Inner Circle
-				//fRedCircleRadius * 0.6f - Third Inner Circle
-				//fRedCircleRadius * 0.45f - Fourth Inner Circle
 
 				// Set target to a point slightly outside the red circle (safe distance)
 				argos::Real safeDistance = redCircleRadius + 0.1;

@@ -995,7 +995,7 @@ bool CPFA_loop_functions::IsExperimentFinished() {
     if(score >= NumDistributedFood){
 		isFinished = true;
 	}
-    if(curr_time_in_minutes >= 18.0) {
+    if(curr_time_in_minutes >= 20.0) {
         isFinished = true;
 
     }

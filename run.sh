@@ -5,7 +5,7 @@
 # and extracts the "Resource Collected:" lines from the output
 
 CONFIG_FILE="experiments/Clustered_CPFA_r64_tag512_16by16.xml"
-OUTPUT_FILE="results_18_mins_32_robots.txt"
+OUTPUT_FILE="results_20_mins_80_robots.txt"
 TEMP_CONFIG="temp_80.xml"
 
 # Array of random seeds to use
