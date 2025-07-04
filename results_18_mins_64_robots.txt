@@ -1,30 +1,30 @@
 === Run 1 (Seed: 123456) ===
-Resource Collected: 109.000000, Time Took: 18.000000 minutes, Random Seed: 123456
+Resource Collected: 155.000000, Collision Time: 24.939844, Time Took: 18.000000 minutes, Random Seed: 123456
 
 === Run 2 (Seed: 789012) ===
-Resource Collected: 108.000000, Time Took: 18.000000 minutes, Random Seed: 789012
+Resource Collected: 153.000000, Collision Time: 29.946875, Time Took: 18.000000 minutes, Random Seed: 789012
 
 === Run 3 (Seed: 345678) ===
-Resource Collected: 90.000000, Time Took: 18.000000 minutes, Random Seed: 345678
+Resource Collected: 104.000000, Collision Time: 21.395833, Time Took: 18.000000 minutes, Random Seed: 345678
 
 === Run 4 (Seed: 901234) ===
-Resource Collected: 110.000000, Time Took: 18.000000 minutes, Random Seed: 901234
+Resource Collected: 180.000000, Collision Time: 26.508073, Time Took: 18.000000 minutes, Random Seed: 901234
 
 === Run 5 (Seed: 567890) ===
-Resource Collected: 102.000000, Time Took: 18.000000 minutes, Random Seed: 567890
+Resource Collected: 129.000000, Collision Time: 24.442969, Time Took: 18.000000 minutes, Random Seed: 567890
 
 === Run 6 (Seed: 135791) ===
-Resource Collected: 95.000000, Time Took: 18.000000 minutes, Random Seed: 135791
+Resource Collected: 127.000000, Collision Time: 23.411719, Time Took: 18.000000 minutes, Random Seed: 135791
 
 === Run 7 (Seed: 246802) ===
-Resource Collected: 104.000000, Time Took: 18.000000 minutes, Random Seed: 246802
+Resource Collected: 84.000000, Collision Time: 18.779427, Time Took: 18.000000 minutes, Random Seed: 246802
 
 === Run 8 (Seed: 864209) ===
-Resource Collected: 117.000000, Time Took: 18.000000 minutes, Random Seed: 864209
+Resource Collected: 56.000000, Collision Time: 17.065885, Time Took: 18.000000 minutes, Random Seed: 864209
 
 === Run 9 (Seed: 751936) ===
-Resource Collected: 112.000000, Time Took: 18.000000 minutes, Random Seed: 751936
+Resource Collected: 138.000000, Collision Time: 23.318750, Time Took: 18.000000 minutes, Random Seed: 751936
 
 === Run 10 (Seed: 428573) ===
-Resource Collected: 110.000000, Time Took: 18.000000 minutes, Random Seed: 428573
+Resource Collected: 135.000000, Collision Time: 30.269792, Time Took: 18.000000 minutes, Random Seed: 428573
 

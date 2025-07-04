@@ -48,7 +48,8 @@ CPFA_controller::CPFA_controller() :
 		isFollowingPredefinedPathOnForbiddenArea(false),
 		isFollowingAvoidance(false),
 		isFollowingOuterCircle(false),
-		isWaitingForNest(false)
+		isWaitingForNest(false),
+		isWaitingForCollision(false)
 {
 	GoStraightAngleRangeInDegreesInRegion.Set(-30.0, 30.0);
 	GoStraightAngleRangeInDegreesGoingToRegion.Set(-55.0, 55.0);
@@ -726,16 +727,10 @@ void CPFA_controller::Returning() {
 
 			if(LoopFunctions->IsNearRedCircle(GetPosition()) || LoopFunctions->IsInsideRedCircle(GetPosition())) {
 
-				if(LoopFunctions->IsNearForbiddenArea(GetPosition()).isHit) {
-					// LOG << GetId() << " is near forbidden area, start following" << std::endl;
-					// isNearForbiddenArea = true;
-					// isFollowingAvoidance = true;
-					// CVector2 entryPoint(LoopFunctions->RedCirclePosition.GetX(), 
-					// 	LoopFunctions->RedCirclePosition.GetY() + LoopFunctions->RedCircleRadius
-					// 	);
-					// SetTarget(entryPoint);
-					// SetIsHeadingToNest(false);
-					Real predefinedPathIndex = RNG->Uniform(CRange<UInt32>(5, 20));
+				if(LoopFunctions->IsNearExitPoint(GetPosition())) {
+					isReachedFifthInnerCircle = true;
+					isFollowingPredefinedPath = true;
+					predefinedPathIndex = RNG->Uniform(CRange<UInt32>(5, 20));
 					SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
 					SetIsHeadingToNest(false);
 					CPFA_state = FOLLOWING_ENTRY_PATH;
@@ -773,23 +768,42 @@ void CPFA_controller::Returning() {
 					}
 
 					if(CollisionDetection()) {
-						if(isReachedFifthInnerCircle) {
-							predefinedPathIndex = predefinedPathIndexOnFourthInnerCircle;
-						} else if(isReachedFourthInnerCircle) {
-							predefinedPathIndex = predefinedPathIndexOnThirdInnerCircle;
-						} else if(isReachedThirdInnerCircle) {
-							predefinedPathIndex = predefinedPathIndexOnSecondInnerCircle;
-						} else if(isReachedSecondInnerCircle || isReachedFirstInnerCircle) {
-							predefinedPathIndex = predefinedPathIndexOnFirstInnerCircle;
-						} else {
-							return;
+						if(!isWaitingForCollision) {
+							timeCollided = collision_counter;
+							isWaitingForCollision = true;
 						}
 
-						SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
-						SetIsHeadingToNest(false);
-						isFollowingOuterCircle = true;
-						CPFA_state = FOLLOWING_OUTER_CIRCLE;
-						return;
+						if(isWaitingForCollision) {
+							size_t collision = collision_counter - timeCollided;
+							if(collision > 50) {
+								// LOG << LoopFunctions->SimTime << ": " << GetId() << " collided " 
+								//     << collision << "times. Moving to outer circle." << std::endl;
+								if(isReachedFourthInnerCircle) {
+									predefinedPathIndex = predefinedPathIndexOnFourthInnerCircle;
+								} else if(isReachedThirdInnerCircle) {
+									predefinedPathIndex = predefinedPathIndexOnThirdInnerCircle;
+								} else if(isReachedSecondInnerCircle) {
+									predefinedPathIndex = predefinedPathIndexOnSecondInnerCircle;
+								} else if(isReachedFirstInnerCircle) {
+									predefinedPathIndex = predefinedPathIndexOnFirstInnerCircle;
+								}
+								else {
+									return;
+								}
+
+								SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
+								SetIsHeadingToNest(false);
+								isFollowingOuterCircle = true;
+								isWaitingForCollision = false;
+								CPFA_state = FOLLOWING_OUTER_CIRCLE;
+								return;
+							}
+						}
+					} else {
+						if(isWaitingForCollision) {
+							isWaitingForCollision = false;
+							timeCollided = 0;
+						}
 					}
 
 					// Robot is not at last inner circle yet, head towards it

@@ -5,7 +5,7 @@
   <!-- ************************* -->
   <framework>
     <system threads="1"/>
-    <experiment length="0" random_seed="567890" ticks_per_second="32"/>
+    <experiment length="0" random_seed="123456" ticks_per_second="32"/>
   </framework>
 
   <!-- *************** -->
@@ -32,7 +32,7 @@
         <settings DestinationNoiseStdev="0.0" FoodDistanceTolerance="0.13" NestAngleTolerance="0.1" 
         NestDistanceTolerance="0.05" PositionNoiseStdev="0.00" ResultsDirectoryPath="results/"
          RobotForwardSpeed="16.0" RobotRotationSpeed="8.0" SearchStepSize="0.08" TargetAngleTolerance="0.1" 
-         TargetDistanceTolerance="0.05" QuardArena="0"/>
+         TargetDistanceTolerance="0.05"/>
       </params>
 
     </CPFA_controller>
@@ -91,7 +91,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     <distribute>
       <position center="3.0, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
-      <entity max_trials="100" quantity="20">
+      <entity max_trials="100" quantity="16">
         <foot-bot id="F0-">
           <controller config="CPFA"/>
         </foot-bot>
@@ -101,7 +101,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     <distribute>
       <position center="0.0, 3.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
-      <entity max_trials="100" quantity="20">
+      <entity max_trials="100" quantity="16">
         <foot-bot id="F1-">
           <controller config="CPFA"/>
         </foot-bot>
@@ -111,7 +111,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     <distribute>
       <position center="-3.0, 0.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
-      <entity max_trials="100" quantity="20">
+      <entity max_trials="100" quantity="16">
         <foot-bot id="F2-">
           <controller config="CPFA"/>
         </foot-bot>
@@ -121,7 +121,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
     <distribute>
       <position center="0.0, -3.0, 0.0" distances="0.3, 0.3, 0.0" layout="6, 6, 1" method="grid"/>
       <orientation method="constant" values="0.0, 0.0, 0.0"/>
-      <entity max_trials="100" quantity="20">
+      <entity max_trials="100" quantity="16">
         <foot-bot id="F3-">
           <controller config="CPFA"/>
         </foot-bot>
@@ -146,7 +146,7 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
   <!-- ****************** -->
 
 
-  <!-- <visualization>
+  <visualization>
 
     <qt-opengl>
       <camera>
@@ -157,6 +157,6 @@ VaryForwardSpeedFlag = "0" NumOfBranches = "4"/>
       <user_functions label="CPFA_qt_user_functions"/>
     </qt-opengl>
 
-  </visualization> -->
+  </visualization>
 -->
 </argos-configuration>

@@ -158,6 +158,10 @@ class CPFA_controller : public BaseController {
 		bool isFollowingAvoidance;
 		bool isFollowingOuterCircle;
 		bool isWaitingForNest;
+		bool isWaitingForCollision;
+
+		size_t timeCollided;
+
 		argos::CVector2 entryPoint;
 		argos::Real redCircleRadius;
 
