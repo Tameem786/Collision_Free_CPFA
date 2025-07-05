@@ -37,6 +37,8 @@ class CPFA_controller : public BaseController {
 
 		bool CollisionDetection() override;
 
+		Real GetTotalTimeInSideRedCircle();
+
 		Real FoodDistanceTolerance;
 		int selectedNestIndex;
 		int selectedWaitingQueueIndex;
@@ -58,6 +60,7 @@ class CPFA_controller : public BaseController {
 
 		int currentQueuePosition;
 		int nextPosCheckingTried;
+		Real totalTimeInsideCirle;
 
 		/* pheromone trail variables */
 		std::vector<argos::CVector2> TrailToShare;
@@ -161,6 +164,9 @@ class CPFA_controller : public BaseController {
 		bool isWaitingForCollision;
 
 		size_t timeCollided;
+		Real timeInsideRedCircle;
+		
+		bool timeSet;
 
 		argos::CVector2 entryPoint;
 		argos::Real redCircleRadius;
@@ -209,6 +215,8 @@ class CPFA_controller : public BaseController {
 		std::vector<argos::CVector2> predefinedPath;
 		std::vector<argos::CVector3> predefinedNestEntryPath;
 		std::vector<argos::CVector3> predefinedNestExitPath;
+
+		
 };
 
 #endif /* CPFA_CONTROLLER_H */

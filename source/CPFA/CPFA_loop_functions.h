@@ -234,6 +234,7 @@ class CPFA_loop_functions : public argos::CLoopFunctions
 		std::vector<QueueEntry> robotQueue;  // Ordered list of robots in queue
   
                 Real   CollisionTime;
+				Real TimeInsideRedCirlce;
                 size_t currCollisionTime; 
                 size_t lastCollisionTime; 
                 size_t lastNumCollectedFood;

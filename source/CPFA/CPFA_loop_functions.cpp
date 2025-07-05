@@ -1024,10 +1024,11 @@ void CPFA_loop_functions::PostExperiment() {
         argos::CFootBotEntity& footBot = *argos::any_cast<argos::CFootBotEntity*>(it->second);
         BaseController& c = dynamic_cast<BaseController&>(footBot.GetControllableEntity().GetController());
         CPFA_controller& c2 = dynamic_cast<CPFA_controller&>(c);
-        CollisionTime += c2.GetCollisionTime();   
+        CollisionTime += c2.GetCollisionTime();
+        TimeInsideRedCirlce += c2.GetTotalTimeInSideRedCircle();
     }
 	  
-    printf("Resource Collected: %f, Collision Time: %f, Time Took: %f minutes, Random Seed: %lu\n", score, (CollisionTime / (2 * (ticks_per_second)))/60.0f, getSimTimeInSeconds()/60.0, RandomSeed);
+    printf("Resource Collected: %.2f, Collision Time: %.2f, Time Inside RedCircle: %.2f, Time Took: %.2f minutes, Random Seed: %lu\n", score, (CollisionTime / (2 * (ticks_per_second)))/60.0f, (TimeInsideRedCirlce/60.0f)/score, getSimTimeInSeconds()/60.0, RandomSeed);
        
                   
     // if (PrintFinalScore == 1) {

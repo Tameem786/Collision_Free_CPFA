@@ -49,7 +49,10 @@ CPFA_controller::CPFA_controller() :
 		isFollowingAvoidance(false),
 		isFollowingOuterCircle(false),
 		isWaitingForNest(false),
-		isWaitingForCollision(false)
+		isWaitingForCollision(false),
+		timeSet(false),
+		timeInsideRedCircle(0.0),
+		totalTimeInsideCirle(0.0)
 {
 	GoStraightAngleRangeInDegreesInRegion.Set(-30.0, 30.0);
 	GoStraightAngleRangeInDegreesGoingToRegion.Set(-55.0, 55.0);
@@ -94,43 +97,18 @@ void CPFA_controller::Init(argos::TConfigurationNode &node) {
 }
 
 void CPFA_controller::ControlStep() {
-	/*
-	ofstream log_output_stream;
-	log_output_stream.open("cpfa_log.txt", ios::app);
-
-	// depart from nest after food drop off or simulation start
-	if (isHoldingFood) log_output_stream << "(Carrying) ";
 	
-	switch(CPFA_state)  {
-		case DEPARTING:
-			if (isUsingSiteFidelity) {
-				log_output_stream << "DEPARTING (Fidelity): "
-					<< GetTarget().GetX() << ", " << GetTarget().GetY()
-					<< endl;
-			} else if (isInformed) {
-				log_output_stream << "DEPARTING (Waypoint): "
-				<< GetTarget().GetX() << ", " << GetTarget().GetY() << endl;
-			} else {
-				log_output_stream << "DEPARTING (Searching): "
-				<< GetTarget().GetX() << ", " << GetTarget().GetY() << endl;
-			}
-			break;
-		// after departing(), once conditions are met, begin searching()
-		case SEARCHING:
-			if (isInformed) log_output_stream << "SEARCHING: Informed" << endl;     
-			else log_output_stream << "SEARCHING: UnInformed" << endl;
-			break;
-		// return to nest after food pick up or giving up searching()
-		case RETURNING:
-			log_output_stream << "RETURNING" << endl;
-			break;
-		case SURVEYING:
-			log_output_stream << "SURVEYING" << endl;
-			break;
-		default:
-			log_output_stream << "Unknown state" << endl;
-	}
-	*/
+	// if(GetStatus() == "RETURNING" && LoopFunctions->IsNearRedCircle(GetPosition()) && isHoldingFood && !timeSet) {
+	// 	LOG << "Timer start..." << std::endl;
+	// 	timeInsideRedCircle = LoopFunctions->getSimTimeInSeconds();
+	// 	timeSet = true;
+	// }
+
+	// if(timeSet && IsInTheNest(GetPosition())) {
+	// 	LOG << "Time stop..." << std::endl;
+	// 	LOG << GetId() << " took " << LoopFunctions->getSimTimeInSeconds() - timeInsideRedCircle << " seconds." << std::endl;
+	// 	timeSet = false;
+	// }
 
 	// Add line so we can draw the trail
 
@@ -147,11 +125,6 @@ void CPFA_controller::ControlStep() {
 	CPFA();
 	Move();
 
-	// argos::LOG << "Nest Availability: ";
-	// for(const auto& nest : LoopFunctions->pathAvailableToNest) {
-	// 	argos::LOG << nest << " ";
-	// }
-	// argos::LOG << std::endl;
 }
 
 void CPFA_controller::Reset() {
@@ -727,6 +700,13 @@ void CPFA_controller::Returning() {
 
 			if(LoopFunctions->IsNearRedCircle(GetPosition()) || LoopFunctions->IsInsideRedCircle(GetPosition())) {
 
+				if(LoopFunctions->IsInsideRedCircle(GetPosition())) {
+					if(!timeSet) {
+						timeInsideRedCircle = LoopFunctions->getSimTimeInSeconds();
+						timeSet = true;
+					}
+				}
+
 				if(LoopFunctions->IsNearExitPoint(GetPosition())) {
 					isReachedFifthInnerCircle = true;
 					isFollowingPredefinedPath = true;
@@ -1052,6 +1032,11 @@ void CPFA_controller::FollowingEntryPath() {
 	// Check if robot reached nest from predefined path
 	if(isHeadingToEntryPoint && isHoldingFood) {
 		if(IsInTheNest(LoopFunctions->NestPositions[selectedNestIndex])) {
+
+			if(timeSet) {
+				totalTimeInsideCirle += (LoopFunctions->getSimTimeInSeconds() - timeInsideRedCircle);
+				timeSet = false;
+			}
 
 			Wait(5);
 
@@ -1630,6 +1615,10 @@ string CPFA_controller::GetStatus(){//qilu 10/22
     //else if (MPFA_state == INACTIVE) return "INACTIVE";
     else return "SHUTDOWN";
     
+}
+
+Real CPFA_controller::GetTotalTimeInSideRedCircle() {
+	return totalTimeInsideCirle;
 }
 
 

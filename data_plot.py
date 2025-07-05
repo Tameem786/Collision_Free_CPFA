@@ -1,50 +1,42 @@
 from matplotlib.lines import lineStyles
 import matplotlib.pyplot as plt
 import numpy as np
-from run import generate_results, generate_results_18_minuets
+from run import generate_results_18_minuets, generate_results_18_minutes_cpfa
 
 
-scores, collision_times = generate_results_18_minuets()
+scores, collision_times, time_inside_red_circle = generate_results_18_minuets()
+scores_cpfa, collision_times_cpfa, time_inside_red_circle_cpfa = generate_results_18_minutes_cpfa()
+
+# plt.figure(figsize=(8, 6))
+# plt.title("Resouce Collection Comparison in 18 minutes")
+# plt.plot(scores, marker="o", label='cpfa_version_2', color='blue')
+# plt.plot(scores_cpfa, marker="o", label='cpfa_original', color='red')
+# plt.xticks(ticks=np.arange(5), labels=['48', '64', '80', '96', '112'])
+# plt.xlabel("Number of Robots")
+# plt.ylabel("Mean Values")
+# plt.legend()
+# plt.grid(True, linestyle='--')
+# plt.show()
+
+# plt.figure(figsize=(8, 6))
+# plt.title("Collision Time Comparison in 18 minutes")
+# plt.plot(collision_times, marker="o", label='cpfa_version_2', color='blue')
+# plt.plot(collision_times_cpfa, marker="o", label='cpfa_original', color='red')
+# plt.xticks(ticks=np.arange(5), labels=['48', '64', '80', '96', '112'])
+# plt.xlabel("Number of Robots")
+# plt.ylabel("Mean Values")
+# plt.legend()
+# plt.grid(True, linestyle='--')
+# plt.show()
 
 plt.figure(figsize=(8, 6))
-plt.title("Resouce Collection Comparison in CPFA Version 2 With 50 times hit collision logic")
-plt.plot(scores, marker="o", label='resource_collections', color='blue')
-plt.plot(collision_times, marker="o", label='collision_time_in_minutes', color='red')
+plt.title("Drop Resource Time Comparison in 18 minutes")
+plt.plot(time_inside_red_circle, marker="o", label='cpfa_version_2', color='blue')
+plt.plot(time_inside_red_circle_cpfa, marker="o", label='cpfa_original', color='red')
 plt.xticks(ticks=np.arange(5), labels=['48', '64', '80', '96', '112'])
 plt.xlabel("Number of Robots")
-plt.ylabel("Mean Values")
+plt.ylabel("Mean Values [mins]")
 plt.legend()
 plt.grid(True, linestyle='--')
 plt.show()
 
-# # X-axis: Groups of robots
-# robot_groups = [32, 48, 64, 80, 96]
-
-# # Each group has results for [15, 18, 20] minutes
-# time_durations = [15, 18, 20]
-
-# # Dummy resource collection data (replace with your real data)
-# # Each inner list is for one robot group: [at 15 min, 18 min, 20 min]
-# resource_data = generate_results()
-
-# # Transpose for easy plotting
-# resource_data = np.array(resource_data).T
-
-# # Bar width
-# bar_width = 0.2
-# x = np.arange(len(robot_groups))  # the label locations
-
-# # Plot
-# plt.figure(figsize=(10, 6))
-# for i, duration in enumerate(time_durations):
-#     plt.bar(x + i * bar_width, resource_data[i], width=bar_width, label=f'{duration} mins')
-
-# # Labels and formatting
-# plt.xlabel('Number of Robots')
-# plt.ylabel('Resources Collected')
-# plt.title('Resource Collection vs Number of Robots (CPFA Version 2)')
-# plt.xticks(x + bar_width, robot_groups)
-# plt.legend()
-# plt.grid(axis='y', linestyle='--', alpha=0.7)
-# plt.tight_layout()
-# plt.show()
