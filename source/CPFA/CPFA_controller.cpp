@@ -132,6 +132,7 @@ void CPFA_controller::ControlStep() {
 	//UpdateTargetRayList();
 	CPFA();
 	Move();
+	
 
 	// argos::LOG << "Available path to nest: ";
 	// for(const auto& nest : LoopFunctions->pathAvailableToNest) {
@@ -195,10 +196,12 @@ void CPFA_controller::CPFA() {
 		// depart from nest after food drop off or simulation start
 		case DEPARTING:
 			//SetIsHeadingToNest(false);
+			m_pcLEDs->SetAllColors(CColor::BLUE);
 			Departing();
 			break;
 		// after departing(), once conditions are met, begin searching()
 		case SEARCHING:
+			m_pcLEDs->SetAllColors(CColor::RED);
 			//SetIsHeadingToNest(false);
 			if((SimulationTick() % (SimulationTicksPerSecond() / 2)) == 0) {
 				Searching();
@@ -206,6 +209,7 @@ void CPFA_controller::CPFA() {
 			break;
 		// return to nest after food pick up or giving up searching()
 		case RETURNING:
+			m_pcLEDs->SetAllColors(CColor::GREEN);
 			//SetIsHeadingToNest(true);
 			Returning();
 			break;
@@ -214,9 +218,11 @@ void CPFA_controller::CPFA() {
 			Surveying();
 			break;
 		case EXITING:
+			m_pcLEDs->SetAllColors(CColor::CYAN);
 			Exiting();
 			break;
 		case FOLLOWING_ENTRY_PATH:
+			m_pcLEDs->SetAllColors(CColor::ORANGE);
 			FollowingEntryPath();
 			break;
 	}
