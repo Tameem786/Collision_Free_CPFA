@@ -40,6 +40,11 @@ class CPFA_controller : public BaseController {
   size_t      GetTravelingTime();//qilu 09/26/2016
   string      GetStatus();//qilu 09/26/2016
   size_t      startTime;//qilu 09/26/2016
+
+		bool setTime;
+		Real timeInsideRedCircle;
+		Real totalTimeInsideRedCircle;
+		Real GetTotalTimeInsideRedCircle();
         
 
 	private:

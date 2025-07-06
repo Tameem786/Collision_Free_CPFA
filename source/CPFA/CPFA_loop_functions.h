@@ -187,6 +187,7 @@ class CPFA_loop_functions : public argos::CLoopFunctions
                 vector<size_t>		ForageList;
 				argos::CVector2 NestPosition;
 				std::vector<argos::CVector2> NestPositions;
+		Real TimeInsideRedCircle;
 		
 	private:
 

@@ -32,7 +32,10 @@ CPFA_controller::CPFA_controller() :
 		isFollowingNestPredefinedEntryPath(false),
 		isFollowingNestPredefinedExitPath(false),
 		isLeavingForColliding(false),
-		isWaitingForNest(false)
+		isWaitingForNest(false),
+		setTime(false),
+		timeInsideRedCircle(0.0),
+		totalTimeInsideRedCircle(0.0)
 {
 	GoStraightAngleRangeInDegreesInRegion.Set(-30.0, 30.0);
 	GoStraightAngleRangeInDegreesGoingToRegion.Set(-55.0, 55.0);
@@ -703,6 +706,11 @@ void CPFA_controller::Returning() {
 				isFollowingPredefinedPath = true;
 				predefinedPathIndex = index;
 				isFollowingCircleBoundary = false;
+
+				if(!setTime) {
+					timeInsideRedCircle = LoopFunctions->getSimTimeInSeconds();
+					setTime = true;
+				}
 				
 				// Set first waypoint of predefined path
 				SetTarget(LoopFunctions->SpiralPathCoordinatesForController[predefinedPathIndex]);
@@ -841,6 +849,11 @@ void CPFA_controller::FollowingEntryPath() {
 	if(isHeadingToEntryPoint && isHoldingFood) {
 		if(IsInTheNest(LoopFunctions->NestPositions[selectedNestIndex])) {
 
+			if(setTime) {
+				totalTimeInsideRedCircle += (LoopFunctions->getSimTimeInSeconds() - timeInsideRedCircle);
+				setTime = false;
+			}
+
 			Wait(5);
 
 			// argos::LOG << GetId() << " Reached nest. Dropping food and exiting." << std::endl;
@@ -879,6 +892,10 @@ void CPFA_controller::FollowingEntryPath() {
 			SetTarget(LoopFunctions->NestPositions[selectedNestIndex]);
 		}
 	}
+}
+
+Real CPFA_controller::GetTotalTimeInsideRedCircle() {
+	return totalTimeInsideRedCircle;
 }
 
 bool CPFA_controller::CollisionDetection() {

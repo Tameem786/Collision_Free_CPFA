@@ -5,20 +5,22 @@
 # and extracts the "Resource Collected:" lines from the output
 
 CONFIG_FILE="experiments/Clustered_CPFA_r64_tag512_16by16.xml"
-OUTPUT_FILE="results_20_mins_96_robots.txt"
-TEMP_CONFIG="temp_96.xml"
+OUTPUT_FILE="results_18_mins_112_robots.txt"
+TEMP_CONFIG="temp_112.xml"
 
 # Array of random seeds to use
-SEEDS=(123456 789012 345678 901234 567890 135791 246802 864209 751936 428573)
+SEEDS=(123456 789012 345678 901234 567890 135791 246802 864209 751936 428573 
+       613579 982034 704321 319864 580246 162738 947120 830591 204869 678345  
+       793624 115320 926481 307159 481206 693018 859473 374829 142607 620591)
 
 # Clear previous results
 > "$OUTPUT_FILE"
 
-echo "Starting 10 simulation runs with different random seeds..."
+echo "Starting 20 simulation runs with different random seeds..."
 echo "Results will be saved to: $OUTPUT_FILE"
 echo ""
 
-for i in {0..9}; do
+for i in {0..19}; do
     SEED=${SEEDS[$i]}
     RUN_NUMBER=$((i + 1))
     

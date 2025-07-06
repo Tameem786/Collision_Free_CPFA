@@ -1,0 +1,60 @@
+=== Run 1 (Seed: 123456) ===
+Resource Collected: 58.00, Collision Time: 245.31, Time Inside RedCircle: 7.17, Time Took: 18.00 minutes, Random Seed: 123456
+
+=== Run 2 (Seed: 789012) ===
+Resource Collected: 83.00, Collision Time: 199.30, Time Inside RedCircle: 6.71, Time Took: 18.00 minutes, Random Seed: 789012
+
+=== Run 3 (Seed: 345678) ===
+Resource Collected: 63.00, Collision Time: 210.92, Time Inside RedCircle: 6.54, Time Took: 18.00 minutes, Random Seed: 345678
+
+=== Run 4 (Seed: 901234) ===
+Resource Collected: 15.00, Collision Time: 314.70, Time Inside RedCircle: 7.74, Time Took: 18.00 minutes, Random Seed: 901234
+
+=== Run 5 (Seed: 567890) ===
+Resource Collected: 105.00, Collision Time: 162.81, Time Inside RedCircle: 7.14, Time Took: 18.00 minutes, Random Seed: 567890
+
+=== Run 6 (Seed: 135791) ===
+Resource Collected: 73.00, Collision Time: 189.60, Time Inside RedCircle: 8.06, Time Took: 18.00 minutes, Random Seed: 135791
+
+=== Run 7 (Seed: 246802) ===
+Resource Collected: 91.00, Collision Time: 184.35, Time Inside RedCircle: 7.46, Time Took: 18.00 minutes, Random Seed: 246802
+
+=== Run 8 (Seed: 864209) ===
+Resource Collected: 41.00, Collision Time: 271.57, Time Inside RedCircle: 8.66, Time Took: 18.00 minutes, Random Seed: 864209
+
+=== Run 9 (Seed: 751936) ===
+Resource Collected: 42.00, Collision Time: 265.99, Time Inside RedCircle: 7.19, Time Took: 18.00 minutes, Random Seed: 751936
+
+=== Run 10 (Seed: 428573) ===
+Resource Collected: 21.00, Collision Time: 286.80, Time Inside RedCircle: 8.94, Time Took: 18.00 minutes, Random Seed: 428573
+
+=== Run 11 (Seed: 613579) ===
+Resource Collected: 59.00, Collision Time: 204.12, Time Inside RedCircle: 7.61, Time Took: 18.00 minutes, Random Seed: 613579
+
+=== Run 12 (Seed: 982034) ===
+Resource Collected: 34.00, Collision Time: 315.73, Time Inside RedCircle: 7.63, Time Took: 18.00 minutes, Random Seed: 982034
+
+=== Run 13 (Seed: 704321) ===
+Resource Collected: 11.00, Collision Time: 351.29, Time Inside RedCircle: 7.86, Time Took: 18.00 minutes, Random Seed: 704321
+
+=== Run 14 (Seed: 319864) ===
+Resource Collected: 51.00, Collision Time: 251.62, Time Inside RedCircle: 7.55, Time Took: 18.00 minutes, Random Seed: 319864
+
+=== Run 15 (Seed: 580246) ===
+Resource Collected: 82.00, Collision Time: 186.30, Time Inside RedCircle: 6.67, Time Took: 18.00 minutes, Random Seed: 580246
+
+=== Run 16 (Seed: 162738) ===
+Resource Collected: 36.00, Collision Time: 270.62, Time Inside RedCircle: 9.91, Time Took: 18.00 minutes, Random Seed: 162738
+
+=== Run 17 (Seed: 947120) ===
+Resource Collected: 69.00, Collision Time: 223.10, Time Inside RedCircle: 7.36, Time Took: 18.00 minutes, Random Seed: 947120
+
+=== Run 18 (Seed: 830591) ===
+Resource Collected: 108.00, Collision Time: 132.99, Time Inside RedCircle: 6.83, Time Took: 18.00 minutes, Random Seed: 830591
+
+=== Run 19 (Seed: 204869) ===
+Resource Collected: 91.00, Collision Time: 178.98, Time Inside RedCircle: 7.28, Time Took: 18.00 minutes, Random Seed: 204869
+
+=== Run 20 (Seed: 678345) ===
+Resource Collected: 68.00, Collision Time: 196.16, Time Inside RedCircle: 7.30, Time Took: 18.00 minutes, Random Seed: 678345
+
