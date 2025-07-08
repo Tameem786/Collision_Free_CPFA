@@ -276,7 +276,7 @@ void CPFA_loop_functions::SetNestsPredefinedEntryPathCoordinates() {
     nest3EntryPoints.push_back(lastPoint3);
     nest4EntryPoints.push_back(lastPoint4);
 
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 16; i++) {
         lastPoint1.Set(lastPoint1.GetX(), lastPoint1.GetY() + 0.05f, 0.0f);
         nest1EntryPoints.push_back(lastPoint1);
     }
@@ -286,40 +286,38 @@ void CPFA_loop_functions::SetNestsPredefinedEntryPathCoordinates() {
         nest1EntryPoints.push_back(lastPoint1);
     }
 
+    //need change
+    // for(int i = 0; i < 3; i++) {
+    //     lastPoint2.Set(lastPoint2.GetX() - 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
+    //     nest2EntryPoints.push_back(lastPoint2);
+    // }
+
+    // for(int i = 0; i < 9; i++) {
+    //     lastPoint2.Set(lastPoint2.GetX(), lastPoint2.GetY() + 0.05f, 0.0f);
+    //     nest2EntryPoints.push_back(lastPoint2);
+    // }
+
+    // for(int i = 0; i < 5; i++) {
+    //     lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY(), 0.0f);
+    //     nest2EntryPoints.push_back(lastPoint2);
+    // }
+
+    //need change
     for(int i = 0; i < 3; i++) {
-        lastPoint2.Set(lastPoint2.GetX() - 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
+        lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY() + 0.05f, 0.0f);
         nest2EntryPoints.push_back(lastPoint2);
     }
 
-    for(int i = 0; i < 9; i++) {
-        lastPoint2.Set(lastPoint2.GetX(), lastPoint2.GetY() + 0.05f, 0.0f);
-        nest2EntryPoints.push_back(lastPoint2);
-    }
+    lastPoint2.Set(-0.3, 0.0, 0.0f);
+    nest2EntryPoints.push_back(lastPoint2);
 
-    for(int i = 0; i < 5; i++) {
-        lastPoint2.Set(lastPoint2.GetX() + 0.05f, lastPoint2.GetY(), 0.0f);
-        nest2EntryPoints.push_back(lastPoint2);
-    }
-
-    for(int i = 0; i < 6; i++) {
-        lastPoint3.Set(lastPoint3.GetX() - 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
+    for(int i = 0; i < 3; i++) {
+        lastPoint3.Set(lastPoint3.GetX() + 0.05f, lastPoint3.GetY() + 0.05f, 0.0f);
         nest3EntryPoints.push_back(lastPoint3);
     }
 
-    for(int i = 0; i < 12; i++) {
-        lastPoint3.Set(lastPoint3.GetX(), lastPoint3.GetY() + 0.05f, 0.0f);
-        nest3EntryPoints.push_back(lastPoint3);
-    }
-
-    for(int i = 0; i < 14; i++) {
-        lastPoint3.Set(lastPoint3.GetX() + 0.05f, lastPoint3.GetY(), 0.0f);
-        nest3EntryPoints.push_back(lastPoint3);
-    }
-
-    for(int i = 0; i < 2; i++) {
-        lastPoint4.Set(lastPoint4.GetX(), lastPoint4.GetY() + 0.05f, 0.0f);
-        nest4EntryPoints.push_back(lastPoint4);
-    }
+    lastPoint3.Set(0.0, -0.3, 0.0f);
+    nest3EntryPoints.push_back(lastPoint3);
 
     for(int i = 0; i < 16; i++) {
         lastPoint4.Set(lastPoint4.GetX()+ 0.05f, lastPoint4.GetY(), 0.0f);
@@ -432,7 +430,7 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
             arcSpanDeg = 340.0f;
         }
         Real arcStart = reverse ? startAngleDeg + arcSpanDeg : startAngleDeg;
-        Real arcSpan = (layer == 5) ? 165.0f : arcSpanDeg;
+        Real arcSpan = (layer == 5) ? 170.0f : arcSpanDeg;
         Real arcDir = reverse ? -arcSpan : arcSpan;
 
         // === Generate arc ===
@@ -465,6 +463,20 @@ void CPFA_loop_functions::SetSpiralPathCoordinates() {
 
             // Update radius based on new point
             radius = (nextPoint - center).Length();
+        }
+
+        if (layer == 5) { // skip final step after last arc
+            CVector3 last3D = SpiralPathCoordinates.back();
+            CVector2 last2D(last3D.GetX(), last3D.GetY());
+            CVector2 target(0.0, 0.0);
+            CVector2 dir = target - last2D;
+            dir.Normalize();
+
+            CVector2 nextPoint = last2D + fRedCircleRadius * 0.06 * dir;
+            SpiralPathCoordinates.push_back(CVector3(nextPoint.GetX(), nextPoint.GetY(), 0.1f));
+
+            // Update radius based on new point
+            // radius = (nextPoint - center).Length();
         }
     }
 
