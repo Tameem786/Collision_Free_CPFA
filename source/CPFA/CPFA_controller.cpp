@@ -758,8 +758,6 @@ void CPFA_controller::FollowingEntryPath() {
 
 		// Check if we've completed the path (reached nest) - Works Fine Up to Here
 		if(predefinedPathIndex >= LoopFunctions->SpiralPathCoordinatesForController.size()-1) {
-			// argos::LOG << GetId() << " Completed predefined path. Heading to nest." << std::endl;
-			
 			
 			int availablePathToNest = LoopFunctions->GetAvailablePathToNest();
 
@@ -774,13 +772,13 @@ void CPFA_controller::FollowingEntryPath() {
 				Real nestX = LoopFunctions->NestPositions[selectedNestIndex].GetX();
 				Real nestY = LoopFunctions->NestPositions[selectedNestIndex].GetY();
 				if(nestX == 0.0 && nestY == -0.3) {
-					predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
+					predefinedNestEntryPath = LoopFunctions->nest3EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest2ExitPoints;
 				} else if(nestX == -0.3 && nestY == 0.0) {
 					predefinedNestEntryPath = LoopFunctions->nest2EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest1ExitPoints;
 				} else if(nestX == 0.0 && nestY == 0.3) {
-					predefinedNestEntryPath = LoopFunctions->nest3EntryPoints;
+					predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
 					predefinedNestExitPath = LoopFunctions->nest4ExitPoints;
 				} else if(nestX == 0.3 && nestY == 0.0) {
 					predefinedNestEntryPath = LoopFunctions->nest4EntryPoints;
@@ -815,14 +813,15 @@ void CPFA_controller::FollowingEntryPath() {
 
 			Real nestX = LoopFunctions->NestPositions[selectedNestIndex].GetX();
 			Real nestY = LoopFunctions->NestPositions[selectedNestIndex].GetY();
+
 			if(nestX == 0.0 && nestY == -0.3) {
-				predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
+				predefinedNestEntryPath = LoopFunctions->nest3EntryPoints;
 				predefinedNestExitPath = LoopFunctions->nest2ExitPoints;
 			} else if(nestX == -0.3 && nestY == 0.0) {
 				predefinedNestEntryPath = LoopFunctions->nest2EntryPoints;
 				predefinedNestExitPath = LoopFunctions->nest1ExitPoints;
 			} else if(nestX == 0.0 && nestY == 0.3) {
-				predefinedNestEntryPath = LoopFunctions->nest3EntryPoints;
+				predefinedNestEntryPath = LoopFunctions->nest1EntryPoints;
 				predefinedNestExitPath = LoopFunctions->nest4ExitPoints;
 			} else if(nestX == 0.3 && nestY == 0.0) {
 				predefinedNestEntryPath = LoopFunctions->nest4EntryPoints;

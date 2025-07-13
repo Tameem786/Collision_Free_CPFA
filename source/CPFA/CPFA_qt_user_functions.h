@@ -35,6 +35,8 @@ class CPFA_qt_user_functions : public argos::CQTOpenGLUserFunctions {
 		void DrawCircleFromCoordinates();
 		void GenerateSpiralPathCoordinates();
 		void DrawSpiralPaths();
+		void DrawEntryPaths();
+		void DrawExitPaths();
 
 		CPFA_loop_functions& loopFunctions;
  
